@@ -4,6 +4,7 @@ import os
 import requests
 import json
 from datetime import datetime
+import yfinance as yf
 
 from sp_fetcher import fetch_all_data
 from sp_engine import calculate_shock_scores, gecmis_veriyi_yukle, GECMIS_DOSYA
@@ -44,11 +45,38 @@ def send_telegram_message(message):
         except Exception as e:
             print(f"Telegram hatası: {e}")
 
+def check_earnings_risk(ticker):
+    """BİLANÇO KALKANI: Önümüzdeki 5 gün içinde bilanço varsa True ve tarih döner."""
+    try:
+        t = yf.Ticker(ticker)
+        cal = t.calendar
+        if cal is None:
+            return False, ""
+        
+        ed = None
+        if isinstance(cal, dict):
+            ed = cal.get('Earnings Date')
+        elif hasattr(cal, 'get'):
+            ed = cal.get('Earnings Date')
+        elif hasattr(cal, 'loc') and 'Earnings Date' in cal.index:
+            ed = cal.loc['Earnings Date'].values
+
+        if ed is not None:
+            if not isinstance(ed, (list, np.ndarray)):
+                ed = [ed]
+            for d in ed:
+                if pd.notna(d):
+                    d_date = d.date() if hasattr(d, 'date') else pd.to_datetime(d).date()
+                    days_diff = (d_date - datetime.now().date()).days
+                    if 0 <= days_diff <= 5:
+                        return True, f"{d_date.strftime('%d.%m')} ({days_diff} Gün Kaldı)"
+    except Exception:
+        pass
+    return False, ""
+
 def generate_exit_signals(df_current):
-    """Son 5 gün içinde girilen açık pozisyonları denetler ve ÇIKIŞ/STOP/KÂR AL sinyali üretir."""
     if not os.path.exists(LEDGER_FILE):
         return ""
-
     try:
         df_ledger = pd.read_csv(LEDGER_FILE)
     except:
@@ -57,14 +85,12 @@ def generate_exit_signals(df_current):
     if df_ledger.empty or 'is_completed' not in df_ledger.columns:
         return ""
 
-    # Henüz tamamlanmamış (5 günü dolmamış) açık pozisyonlar
     open_positions = df_ledger[df_ledger['is_completed'] == 0]
     if open_positions.empty:
         return ""
 
     close_map = dict(zip(df_current['ticker'], df_current['close']))
     bugun = datetime.now().date()
-    
     signals = []
 
     for idx, row in open_positions.iterrows():
@@ -78,21 +104,19 @@ def generate_exit_signals(df_current):
         days_held = (bugun - row_date).days
         pnl = ((curr_p - entry_p) / entry_p) * 100.0
 
-        # ÇIKIŞ MANTIĞI:
         if pnl <= -3.0:
-            signals.append(f"🚨 <b>#{ticker} STOP-LOSS (ACİL ÇIKIŞ)!</b>\n  ↳ <i>Giriş: ${entry_p:.2f} | Güncel: ${curr_p:.2f} | Zarar: <b>%{pnl:+.1f}</b>\n  🛑 Risk sınırına ulaşıldı, zararı kes ve çık!</i>")
+            signals.append(f"🚨 <b>#{ticker} STOP-LOSS (ACİL ÇIKIŞ)!</b>\n  ↳ <i>Giriş: ${entry_p:.2f} | Güncel: ${curr_p:.2f} | Zarar: <b>%{pnl:+.1f}</b>\n  🛑 Stop sınırı kırıldı, pozisyonu kapat!</i>")
         elif pnl >= 6.5:
-            signals.append(f"💰 <b>#{ticker} KÂR AL / YARISINI SAT!</b>\n  ↳ <i>Giriş: ${entry_p:.2f} | Güncel: ${curr_p:.2f} | Kâr: <b>%{pnl:+.1f}</b>\n  🎯 Pozisyonun %50'sini sat, stopu maliyetine (${entry_p:.2f}) çek!</i>")
+            signals.append(f"💰 <b>#{ticker} KÂR AL / YARISINI SAT!</b>\n  ↳ <i>Giriş: ${entry_p:.2f} | Güncel: ${curr_p:.2f} | Kâr: <b>%{pnl:+.1f}</b>\n  🎯 %50 sat kârı al, stopu maliyetine (${entry_p:.2f}) çek!</i>")
         elif days_held >= 5:
-            signals.append(f"⏰ <b>#{ticker} 1 HAFTALIK VADE DOLDU</b>\n  ↳ <i>Güncel Fiyat: ${curr_p:.2f} | Net Sonuç: <b>%{pnl:+.1f}</b>\n  ℹ️ 5 günlük taşıma süresi tamamlandı, pozisyonu kapat.</i>")
+            signals.append(f"⏰ <b>#{ticker} 1 HAFTALIK VADE DOLDU</b>\n  ↳ <i>Güncel: ${curr_p:.2f} | Net: <b>%{pnl:+.1f}</b> (Vade bitti, nakde geç)</i>")
         else:
-            signals.append(f"🟢 <b>#{ticker} TAŞIMAYA DEVAM ET</b> ({days_held}. Gün)\n  ↳ <i>Fiyat: ${curr_p:.2f} | Anlık Durum: <b>%{pnl:+.1f}</b> (Trend stabil)</i>")
+            signals.append(f"🟢 <b>#{ticker} TAŞIMAYA DEVAM ET</b> ({days_held}. Gün)\n  ↳ <i>Fiyat: ${curr_p:.2f} | P/L: <b>%{pnl:+.1f}</b> (Trend stabil)</i>")
 
     if not signals:
         return ""
 
-    exit_report = "🛡️ <b>AÇIK POZİSYONLAR & ÇIKIŞ SİNYALLERİ (Exit Alerts):</b>\n"
-    exit_report += "<i>(Daha önce önerilen hisselerin anlık denetimi)</i>\n"
+    exit_report = "🛡️ <b>AÇIK POZİSYONLAR & ÇIKIŞ SİNYALLERİ (Exit Engine):</b>\n"
     exit_report += "━━━━━━━━━━━━━━━━━━━━\n"
     exit_report += "\n\n".join(signals)
     exit_report += "\n━━━━━━━━━━━━━━━━━━━━\n\n"
@@ -103,6 +127,10 @@ def record_clean_ledger_entries(df_scored):
     new_rows = []
     candidates = df_scored[df_scored['shock_score'] >= 65.0]
     for _, r in candidates.iterrows():
+        # Bilanço karantinasındaki hisseleri deftere gerçek işlem olarak sokma
+        if "BİLANÇO" in r.get('entry_status', ''):
+            continue
+
         new_rows.append({
             "date": bugun_str,
             "ticker": r['ticker'],
@@ -141,18 +169,16 @@ def record_clean_ledger_entries(df_scored):
 def format_shock_report(df_scored, exit_signals_text, min_score=75.0):
     shocks = df_scored[df_scored['shock_score'] >= min_score].sort_values(by='shock_score', ascending=False)
     
-    # 1. BÖLÜM: ÇIKIŞ VE STOP SİNYALLERİ (Önce savunma!)
     msg = ""
     if exit_signals_text:
         msg += exit_signals_text
 
-    # 2. BÖLÜM: YENİ GİRİŞLER
     msg += f"🗽 <b>S&P 500 YENİ KURUMSAL ŞOK LİSTESİ ({min_score:.1f}+)</b>\n"
     msg += f"🗓 <i>{datetime.now().strftime('%Y-%m-%d')} | New York Seans Açılışı</i>\n"
     msg += "━━━━━━━━━━━━━━━━━━━━\n\n"
     
     if shocks.empty:
-        msg += f"ℹ️ <i>Bugün {min_score:.1f} puan ve üzeri yeni kurumsal akış alan hisse bulunamadı.</i>"
+        msg += f"ℹ️ <i>Bugün {min_score:.1f} puan ve üzeri risksiz kurumsal akış alan hisse bulunamadı.</i>"
         return msg
 
     for idx, row in shocks.head(15).iterrows():
@@ -166,11 +192,11 @@ def format_shock_report(df_scored, exit_signals_text, min_score=75.0):
     return msg
 
 def main():
-    print(f"[{datetime.now().strftime('%H:%M:%S')}] === S&P 500 Scanner & Exit Engine Başlıyor ===")
+    print(f"[{datetime.now().strftime('%H:%M:%S')}] === S&P 500 Scanner & Triple Shield Başlıyor ===")
     
     df_current = fetch_all_data()
     if df_current.empty:
-        print("Hata: S&P 500 verisi alınamadı.")
+        print("Hata: S&P 500 verisi temin edilemedi.")
         return
 
     min_score = 75.0
@@ -190,16 +216,29 @@ def main():
     if df_scored.empty:
         return
 
-    # 1. Açık pozisyonlar için ÇIKIŞ/STOP sinyallerini hesapla
+    # 1. BİLANÇO KALKANI KONTROLÜ (Top adaylar için)
+    print("🔍 Bilanço takvimi taranıyor...")
+    for idx, row in df_scored.head(15).iterrows():
+        if row['shock_score'] >= 65.0:
+            has_earnings, e_date = check_earnings_risk(row['ticker'])
+            if has_earnings:
+                print(f"⚠️ {row['ticker']} için bilanço riski tespit edildi: {e_date}")
+                df_scored.at[idx, 'entry_status'] = f"🚨 BİLANÇO RİSKİ ({e_date})"
+                df_scored.at[idx, 'allocation'] = "İşlem Açma (%0 - Bilanço Kumarı)"
+                df_scored.at[idx, 'stars'] = "⚠️"
+                # Skoru barajın hemen altına çekerek zorla alımı engelle
+                df_scored.at[idx, 'shock_score'] = min_score - 1.0
+
+    # 2. Açık pozisyon çıkışlarını hesapla
     exit_signals_text = generate_exit_signals(df_current)
 
-    # 2. Yeni adayları deftere kaydet
+    # 3. Temiz deftere kaydet
     record_clean_ledger_entries(df_scored)
 
-    # 3. Raporu oluştur ve gönder
+    # 4. Raporu ilet
     telegram_msg = format_shock_report(df_scored, exit_signals_text, min_score)
     send_telegram_message(telegram_msg)
-    print("S&P 500 Giriş ve Çıkış Raporu başarıyla iletildi.")
+    print("S&P 500 Güvenlik Kalkanlı Rapor iletildi.")
 
 if __name__ == "__main__":
     main()
