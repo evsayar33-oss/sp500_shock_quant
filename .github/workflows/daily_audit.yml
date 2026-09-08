@@ -33,5 +33,5 @@ jobs:
         run: |
           git config --global user.name "SP500-QuantBot"
           git config --global user.email "bot@sp500.local"
-          git add sp500_ai_state.json backtest_ledger.csv
+          git add -A
           git diff-index --quiet HEAD || (git commit -m "🏆 Auto-Calibration: S&P 500 AI State & Ledger" && git push)
