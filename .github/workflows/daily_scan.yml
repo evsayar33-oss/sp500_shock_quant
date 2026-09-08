@@ -33,5 +33,5 @@ jobs:
         run: |
           git config --global user.name "SP500-QuantBot"
           git config --global user.email "bot@sp500.local"
-          git add backtest_ledger.csv sp500_gecmis_veri.csv sp500_ai_state.json
+          git add -A
           git diff-index --quiet HEAD || (git commit -m "🗽 Auto-Update: S&P 500 Ledger & Scan" && git push)
