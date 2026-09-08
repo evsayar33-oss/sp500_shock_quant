@@ -42,10 +42,8 @@ def calculate_shock_scores(df, df_gecmis, dynamic_thresholds=None, dynamic_weigh
         perf_1m = float(item.get('perf_1m', 0.0))
         perf_3m = float(item.get('perf_3m', 0.0))
         vwap = float(item.get('vwap', 0.0))
-        ema20 = float(item.get('ema20', 0.0))
-        sma50 = float(item.get('sma50', 0.0))
 
-        # 1. VWAP KONTROLÜ (ABD Seansı için %0.6 tolerans)
+        # 1. VWAP KONTROLÜ (Gün içi kurumsal maliyet üstünde mi?)
         is_below_vwap = False
         if vwap > 0 and close < (vwap * 0.994):
             is_below_vwap = True
@@ -56,9 +54,8 @@ def calculate_shock_scores(df, df_gecmis, dynamic_thresholds=None, dynamic_weigh
         safe_atr = max(atr, 0.01)
         z_range = round(min(max(float(((today_range / safe_atr) - 1.0) * 2.5), -2.0), 6.0), 2)
 
-        # ABD dev tahtaları için 100M Dolar normalize likidite
-        liquidity_damping = min(value_traded / 100000000.0, 1.0) if value_traded > 0 else 0.0
-        raw_lambda = ((abs(change) / ((value_traded / 50000000.0) + 1e-9)) * liquidity_damping) if value_traded > 0 else 0.0
+        liquidity_damping = min(value_traded / 50000000.0, 1.0) if value_traded > 0 else 0.0
+        raw_lambda = ((abs(change) / ((value_traded / 25000000.0) + 1e-9)) * liquidity_damping) if value_traded > 0 else 0.0
         z_lambda = round(min(float(np.log1p(raw_lambda) * 2.0), 5.0), 2)
 
         if today_range > 0:
@@ -70,10 +67,7 @@ def calculate_shock_scores(df, df_gecmis, dynamic_thresholds=None, dynamic_weigh
         aggressor_flow = (max(clv, 0.0) * 0.55) + (max(body_eff, 0.0) * 0.45)
         z_flow = round(float(aggressor_flow * 4.0), 2)
 
-        # 3. TREND TABANI (EMA20 & SMA50 Üzerinde mi?)
-        is_above_trend = (close >= ema20) and (close >= sma50 if sma50 > 0 else True)
-
-        # 4. GİRİŞ MARJI (S&P 500 SWEET SPOT: %1.5 ile %4.5 arası)
+        # 3. GİRİŞ MARJI (SWEET SPOT: %1.5 ile %4.5 arası)
         entry_bonus = 0.0
         if 1.5 <= change <= 4.5:
             entry_bonus = 6.0
@@ -91,7 +85,7 @@ def calculate_shock_scores(df, df_gecmis, dynamic_thresholds=None, dynamic_weigh
         if z_flow >= dynamic_thresholds.get('th_flow', 2.0): shock_count += 1
 
         concordance_multiplier = 1.0 + (shock_count * 0.25)
-        is_fresh_shock = (perf_1m <= 15.0) and (perf_3m >= -15.0)
+        is_fresh_shock = (perf_1m <= 18.0) and (perf_3m >= -15.0)
         is_downtrend_knife = (perf_3m < -25.0) and (z_vol < 2.5)
 
         item['z_vol'] = z_vol
@@ -100,7 +94,6 @@ def calculate_shock_scores(df, df_gecmis, dynamic_thresholds=None, dynamic_weigh
         item['z_flow'] = z_flow
         item['shock_count'] = shock_count
         item['concordance_mult'] = concordance_multiplier
-        item['is_above_trend'] = is_above_trend
         item['entry_bonus'] = entry_bonus
         item['entry_status'] = entry_status
         item['is_fresh_shock'] = is_fresh_shock
@@ -129,8 +122,7 @@ def calculate_shock_scores(df, df_gecmis, dynamic_thresholds=None, dynamic_weigh
         res_df['pct_lambda'] * w_l
     ) * (res_df['concordance_mult'] / 1.5)
 
-    trend_boost = np.where(res_df['is_above_trend'], 6.0, -5.0)
-    raw_confidence = base_score + trend_boost + res_df['entry_bonus']
+    raw_confidence = base_score + res_df['entry_bonus']
     final_score = np.clip(np.round(raw_confidence, 1), 0.0, 99.5)
 
     res_df['shock_score'] = np.where(
