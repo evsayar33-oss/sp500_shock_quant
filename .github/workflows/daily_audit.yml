@@ -1,0 +1,37 @@
+name: SP500 Evening Audit & Backtest
+
+on:
+  schedule:
+    - cron: '30 20 * * 1-5'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repoyu Klonla
+        uses: actions/checkout@v4
+
+      - name: Python Kurulumu
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Paketleri Yukle
+        run: pip install -r requirements.txt
+
+      - name: Denetimi Calistir
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+        run: python sp_auditor.py
+
+      - name: Sonuclari Kaydet
+        run: |
+          git config --global user.name "SP500-QuantBot"
+          git config --global user.email "bot@sp500.local"
+          git add sp500_ai_state.json backtest_ledger.csv
+          git diff-index --quiet HEAD || (git commit -m "🏆 Auto-Calibration: S&P 500 AI State & Ledger" && git push)
