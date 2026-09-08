@@ -1,0 +1,37 @@
+name: SP500 Opening Scan
+
+on:
+  schedule:
+    - cron: '10 14 * * 1-5'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repoyu Klonla
+        uses: actions/checkout@v4
+
+      - name: Python Kurulumu
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Paketleri Yukle
+        run: pip install -r requirements.txt
+
+      - name: S&P 500 Taramasini Calistir
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+        run: python main.py
+
+      - name: Defteri Otomatik Kaydet
+        run: |
+          git config --global user.name "SP500-QuantBot"
+          git config --global user.email "bot@sp500.local"
+          git add backtest_ledger.csv sp500_gecmis_veri.csv sp500_ai_state.json
+          git diff-index --quiet HEAD || (git commit -m "🗽 Auto-Update: S&P 500 Ledger & Scan" && git push)
