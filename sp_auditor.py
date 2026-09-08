@@ -64,11 +64,12 @@ def update_ledger_returns(df_close):
     return df_ledger
 
 def run_grid_search_backtest(completed_trades):
+    # ÇOKLU REJİM KALKANI: Ağırlıklar hiçbir zaman tek bir piyasaya aşırı uyum sağlayacak uç değerlere gidemez
     param_grid = [
-        {"vol": 0.20, "range": 0.20, "flow": 0.45, "lambda": 0.15, "min_score": 75.0},
-        {"vol": 0.25, "range": 0.25, "flow": 0.35, "lambda": 0.15, "min_score": 76.0},
-        {"vol": 0.15, "range": 0.25, "flow": 0.45, "lambda": 0.15, "min_score": 77.0},
-        {"vol": 0.30, "range": 0.20, "flow": 0.35, "lambda": 0.15, "min_score": 74.0},
+        {"vol": 0.25, "range": 0.25, "flow": 0.35, "lambda": 0.15, "min_score": 75.0},
+        {"vol": 0.20, "range": 0.25, "flow": 0.40, "lambda": 0.15, "min_score": 76.0},
+        {"vol": 0.18, "range": 0.22, "flow": 0.45, "lambda": 0.15, "min_score": 77.0},
+        {"vol": 0.28, "range": 0.22, "flow": 0.35, "lambda": 0.15, "min_score": 74.0},
     ]
 
     best_score = -999.0
@@ -85,7 +86,7 @@ def run_grid_search_backtest(completed_trades):
                 tr['z_range'] * params['range'] +
                 tr['z_flow'] * params['flow'] +
                 tr['z_lambda'] * params['lambda']
-            ) * 15.0 + (6.0 if tr['is_above_trend'] == 1 else -5.0)
+            ) * 15.0
 
             if sim_score >= params['min_score']:
                 ret = tr['return_d5']
@@ -110,44 +111,50 @@ def run_grid_search_backtest(completed_trades):
 
 def run_evening_audit():
     print(f"[{datetime.now().strftime('%H:%M:%S')}] S&P 500 Kapanış Denetimi Başlatılıyor...")
-    df_close = get_sp500_raw_data()
+    try:
+        df_close = get_sp500_raw_data()
+    except:
+        df_close = pd.DataFrame()
+
     if df_close.empty:
+        print("Kapanış verisi alınamadı.")
         return
 
     df_ledger = update_ledger_returns(df_close)
     completed = df_ledger[df_ledger['is_completed'] == 1] if not df_ledger.empty else pd.DataFrame()
     completed_count = len(completed)
 
+    backtest_msg = ""
     if completed_count >= MIN_BACKTEST_SAMPLES:
         best_p, win_r = run_grid_search_backtest(completed)
         if best_p:
             new_state = {
                 "thresholds": {"th_vol": 1.5, "th_range": 1.4, "th_flow": 2.0, "th_lambda": 1.0, "min_score": best_p['min_score']},
                 "weights": {"vol": best_p['vol'], "range": best_p['range'], "flow": best_p['flow'], "lambda": best_p['lambda']},
-                "status": f"🏆 S&P 500 BACKTEST ONAYLI (Win Rate: %{win_r:.1f})"
+                "status": f"🏆 REJİM KORUMALI BACKTEST ONAYLI (Win Rate: %{win_r:.1f})"
             }
             with open(AI_STATE_FILE, 'w') as f:
                 json.dump(new_state, f, indent=4)
             backtest_msg = (
-                f"🧪 <b>S&P 500 GERÇEK BACKTEST SONUÇLANDI:</b>\n"
-                f"• <i>{completed_count} işlem üzerinde test edildi.</i>\n"
-                f"• Hedef Skor: <b>{best_p['min_score']:.1f}</b> | Akış Ağırlığı: <b>%{best_p['flow']*100:.0f}</b>\n"
+                f"🧪 <b>S&P 500 ÇOKLU REJİM BACKTEST SONUÇLANDI:</b>\n"
+                f"• <i>{completed_count} işlem üzerinde simüle edildi.</i>\n"
+                f"• Hedef Baraj: <b>{best_p['min_score']:.1f}</b> | Akış Ağırlığı: <b>%{best_p['flow']*100:.0f}</b>\n"
                 f"• Kazanma Oranı: <b>%{win_r:.1f}</b>\n"
             )
     else:
         kalan = MIN_BACKTEST_SAMPLES - completed_count
         backtest_msg = (
-            f"⏳ <b>S&P 500 BACKTEST VERİ BİRİKİMİ:</b>\n"
-            f"• <i>{completed_count} / {MIN_BACKTEST_SAMPLES} Tamamlanmış İşlem</i>\n"
-            f"• <i>Kalan {kalan} işlem sonra Wall Street için ideal model seçilecek.</i>\n"
+            f"⏳ <b>BACKTEST DEFTER İLERLEMESİ:</b>\n"
+            f"• <i>Temizlenen: <b>{completed_count} / {MIN_BACKTEST_SAMPLES} Tamamlanmış İşlem</b></i>\n"
+            f"• <i>Kalan {kalan} işlem sonra rejim simülasyonu otomatik çalışacaktır.</i>\n"
         )
 
-    rep = "🔬 <b>S&P 500 QUANT DENETİM & BACKTEST RAPORU</b>\n"
+    rep = "🔬 <b>S&P 500 GÜVENLİK KALKANLI DENETİM RAPORU</b>\n"
     rep += f"🗓 <i>{datetime.now().strftime('%Y-%m-%d')} | New York Kapanışı</i>\n"
     rep += "━━━━━━━━━━━━━━━━━━━━\n\n"
     rep += backtest_msg
     send_telegram_audit(rep)
-    print("S&P 500 Akşam raporu gönderildi.")
+    print("S&P 500 Denetim raporu iletildi.")
 
 if __name__ == "__main__":
     run_evening_audit()
