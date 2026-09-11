@@ -19,7 +19,7 @@ def get_sp500_raw_data():
             {"left": "type", "operation": "equal", "right": "stock"},
             {"left": "subtype", "operation": "in_range", "right": ["common"]},
             {"left": "market_cap_basic", "operation": "greater", "right": 1500000000},
-            {"left": "Value.Traded", "operation": "greater", "right": 15000000}
+            {"left": "Value.Traded", "operation": "greater", "right": 30000000}
         ],
         "columns": [
             "name", "close", "open", "high", "low", "volume", "change", "Value.Traded",

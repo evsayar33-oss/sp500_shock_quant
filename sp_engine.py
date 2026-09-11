@@ -24,7 +24,7 @@ def calculate_shock_scores(df, df_gecmis, dynamic_thresholds=None, dynamic_weigh
     if dynamic_thresholds is None:
         dynamic_thresholds = {"th_vol": 1.5, "th_range": 1.4, "th_flow": 2.0, "th_lambda": 1.0}
     if dynamic_weights is None:
-        dynamic_weights = {"vol": 0.25, "range": 0.25, "flow": 0.35, "lambda": 0.15}
+        dynamic_weights = {"vol": 0.20, "range": 0.25, "flow": 0.45, "lambda": 0.10}
 
     scored_data = []
 
