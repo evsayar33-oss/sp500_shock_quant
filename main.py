@@ -185,7 +185,10 @@ def format_shock_report(df_scored, exit_signals_text, min_score=75.0):
         msg += f"🚀 <b>#{row['ticker']}</b> ── <b>{row['shock_score']:.1f} Puan</b> ({row['stars']})\n"
         msg += f"• <b>Fiyat:</b> ${row['close']:.2f} | <b>Değişim:</b> %{row['change_%']:+.2f}\n"
         msg += f"• <b>Bölge:</b> <i>{row['entry_status']}</i>\n"
-        msg += f"💰 <b>KASA ÖNERİSİ:</b> <b>{row['allocation']}</b>\n\n"
+        tp_p = row['close'] * 1.09
+        sl_p = row['close'] * 0.975
+        msg += f"• 🎯 <b>Target (+%9.0):</b> ${tp_p:.2f} | 🛑 <b>Stop (-%2.5):</b> ${sl_p:.2f} (5-Day Horizon)\n"
+        msg += f"💰 <b>KELLY ALLOCATION:</b> <b>{row['allocation']}</b>\n\n"
         
     msg += "━━━━━━━━━━━━━━━━━━━━\n"
     msg += f"🎯 <i>Toplam {len(shocks)} adet yeni giriş adayı tespit edildi.</i>"
