@@ -153,3 +153,11 @@ def calculate_shock_scores(df, df_gecmis, dynamic_thresholds=None, dynamic_weigh
     res_df = res_df.drop(columns=[col for col in drop_cols if col in res_df.columns])
 
     return res_df.sort_values(by='shock_score', ascending=False).reset_index(drop=True)
+
+def calculate_dynamic_kelly_allocation(shock_score: float, base_alloc: float = 6.8) -> float:
+    """Calculates Quarter Fractional Kelly allocation for S&P 500 based on shock score."""
+    if shock_score < 75.0:
+        return 0.0
+    scale = (shock_score / 75.0) ** 1.5
+    alloc = round(min(max(base_alloc * scale, 6.0), 12.0), 1)
+    return alloc
