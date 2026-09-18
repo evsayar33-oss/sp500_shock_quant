@@ -5,6 +5,7 @@ import os
 import json
 from datetime import datetime
 from sp_fetcher import get_sp500_raw_data
+from autonomy_guard import evaluate_autonomy_guard
 
 AI_STATE_FILE = "sp500_ai_state.json"
 LEDGER_FILE = "backtest_ledger.csv"
@@ -64,7 +65,6 @@ def update_ledger_returns(df_close):
     return df_ledger
 
 def run_grid_search_backtest(completed_trades):
-    # ÇOKLU REJİM KALKANI: Ağırlıklar hiçbir zaman tek bir piyasaya aşırı uyum sağlayacak uç değerlere gidemez
     param_grid = [
         {"vol": 0.25, "range": 0.25, "flow": 0.35, "lambda": 0.15, "min_score": 75.0},
         {"vol": 0.20, "range": 0.25, "flow": 0.40, "lambda": 0.15, "min_score": 76.0},
@@ -124,17 +124,23 @@ def run_evening_audit():
     completed = df_ledger[df_ledger['is_completed'] == 1] if not df_ledger.empty else pd.DataFrame()
     completed_count = len(completed)
 
+    state = {}
+    if os.path.exists(AI_STATE_FILE):
+        try:
+            with open(AI_STATE_FILE, 'r', encoding='utf-8') as f:
+                loaded = json.load(f)
+            state = loaded if isinstance(loaded, dict) else {}
+        except Exception:
+            state = {}
+
     backtest_msg = ""
     if completed_count >= MIN_BACKTEST_SAMPLES:
         best_p, win_r = run_grid_search_backtest(completed)
         if best_p:
-            new_state = {
-                "thresholds": {"th_vol": 1.5, "th_range": 1.4, "th_flow": 2.0, "th_lambda": 1.0, "min_score": best_p['min_score']},
-                "weights": {"vol": best_p['vol'], "range": best_p['range'], "flow": best_p['flow'], "lambda": best_p['lambda']},
-                "status": f"🏆 REJİM KORUMALI BACKTEST ONAYLI (Win Rate: %{win_r:.1f})"
-            }
-            with open(AI_STATE_FILE, 'w') as f:
-                json.dump(new_state, f, indent=4)
+            # Merge legacy calibration into the existing state; autonomy_guard is preserved.
+            state["thresholds"] = {"th_vol": 1.5, "th_range": 1.4, "th_flow": 2.0, "th_lambda": 1.0, "min_score": best_p['min_score']}
+            state["weights"] = {"vol": best_p['vol'], "range": best_p['range'], "flow": best_p['flow'], "lambda": best_p['lambda']}
+            state["status"] = f"🏆 REJİM KORUMALI BACKTEST ONAYLI (Win Rate: %{win_r:.1f})"
             backtest_msg = (
                 f"🧪 <b>S&P 500 ÇOKLU REJİM BACKTEST SONUÇLANDI:</b>\n"
                 f"• <i>{completed_count} işlem üzerinde simüle edildi.</i>\n"
@@ -149,7 +155,20 @@ def run_evening_audit():
             f"• <i>Kalan {kalan} işlem sonra rejim simülasyonu otomatik çalışacaktır.</i>\n"
         )
 
+    guard_result = evaluate_autonomy_guard(
+        state,
+        features=None,
+        performance_returns=(completed["return_d5"] if "return_d5" in completed.columns else None),
+        data_quality_score=100.0,
+        row_count=len(df_close),
+        min_rows=100,
+        project="sp500_shock",
+    )
+    with open(AI_STATE_FILE, 'w', encoding='utf-8') as f:
+        json.dump(state, f, indent=4, ensure_ascii=False)
+
     rep = "🔬 <b>S&P 500 GÜVENLİK KALKANLI DENETİM RAPORU</b>\n"
+    rep += f"🛡️ <b>Otonomi:</b> {guard_result.get('mode', 'NORMAL')} | x{guard_result.get('exposure_multiplier', 1.0):.2f} | {guard_result.get('reason', '')}\n"
     rep += f"🗓 <i>{datetime.now().strftime('%Y-%m-%d')} | New York Kapanışı</i>\n"
     rep += "━━━━━━━━━━━━━━━━━━━━\n\n"
     rep += backtest_msg

@@ -8,6 +8,7 @@ import yfinance as yf
 
 from sp_fetcher import fetch_all_data
 from sp_engine import calculate_shock_scores, gecmis_veriyi_yukle, GECMIS_DOSYA
+from autonomy_guard import evaluate_autonomy_guard
 
 AI_STATE_FILE = "sp500_ai_state.json"
 LEDGER_FILE = "backtest_ledger.csv"
@@ -122,12 +123,11 @@ def generate_exit_signals(df_current):
     exit_report += "\n━━━━━━━━━━━━━━━━━━━━\n\n"
     return exit_report
 
-def record_clean_ledger_entries(df_scored):
+def record_clean_ledger_entries(df_scored, min_score=65.0):
     bugun_str = datetime.now().strftime('%Y-%m-%d')
     new_rows = []
-    candidates = df_scored[df_scored['shock_score'] >= 65.0]
+    candidates = df_scored[df_scored['shock_score'] >= float(min_score)]
     for _, r in candidates.iterrows():
-        # Bilanço karantinasındaki hisseleri deftere gerçek işlem olarak sokma
         if "BİLANÇO" in r.get('entry_status', ''):
             continue
 
@@ -204,14 +204,16 @@ def main():
 
     min_score = 75.0
     dynamic_weights = {"vol": 0.25, "range": 0.25, "flow": 0.35, "lambda": 0.15}
+    guard_state = {}
     if os.path.exists(AI_STATE_FILE):
         try:
             with open(AI_STATE_FILE, 'r') as f:
                 saved = json.load(f)
                 min_score = saved.get('thresholds', {}).get('min_score', 75.0)
                 dynamic_weights = saved.get('weights', dynamic_weights)
+                guard_state = saved if isinstance(saved, dict) else {}
         except Exception:
-            pass
+            guard_state = {}
 
     df_gecmis = gecmis_veriyi_yukle()
     df_scored = calculate_shock_scores(df_current, df_gecmis, dynamic_weights=dynamic_weights)
@@ -219,27 +221,43 @@ def main():
     if df_scored.empty:
         return
 
+    ledger_returns = pd.DataFrame()
+    if os.path.exists(LEDGER_FILE):
+        try:
+            ledger_returns = pd.read_csv(LEDGER_FILE)
+        except Exception:
+            ledger_returns = pd.DataFrame()
+    guard_result = evaluate_autonomy_guard(
+        guard_state,
+        features=df_scored,
+        performance_returns=(ledger_returns["return_d5"] if "return_d5" in ledger_returns.columns else None),
+        data_quality_score=100.0,
+        row_count=len(df_current),
+        min_rows=100,
+        project="sp500_shock",
+    )
+    effective_min_score = float(min_score) + float(guard_result.get("signal_threshold_add", 0.0))
+    if guard_result.get("block_new_entries"):
+        effective_min_score = 101.0
+    with open(AI_STATE_FILE, "w", encoding="utf-8") as f:
+        json.dump(guard_state, f, indent=4, ensure_ascii=False)
+    
     # 1. BİLANÇO KALKANI KONTROLÜ (Top adaylar için)
     print("🔍 Bilanço takvimi taranıyor...")
     for idx, row in df_scored.head(15).iterrows():
-        if row['shock_score'] >= 65.0:
+        if row['shock_score'] >= effective_min_score:
             has_earnings, e_date = check_earnings_risk(row['ticker'])
             if has_earnings:
                 print(f"⚠️ {row['ticker']} için bilanço riski tespit edildi: {e_date}")
                 df_scored.at[idx, 'entry_status'] = f"🚨 BİLANÇO RİSKİ ({e_date})"
                 df_scored.at[idx, 'allocation'] = "İşlem Açma (%0 - Bilanço Kumarı)"
                 df_scored.at[idx, 'stars'] = "⚠️"
-                # Skoru barajın hemen altına çekerek zorla alımı engelle
-                df_scored.at[idx, 'shock_score'] = min_score - 1.0
+                df_scored.at[idx, 'shock_score'] = effective_min_score - 1.0
 
-    # 2. Açık pozisyon çıkışlarını hesapla
     exit_signals_text = generate_exit_signals(df_current)
+    record_clean_ledger_entries(df_scored, effective_min_score)
 
-    # 3. Temiz deftere kaydet
-    record_clean_ledger_entries(df_scored)
-
-    # 4. Raporu ilet
-    telegram_msg = format_shock_report(df_scored, exit_signals_text, min_score)
+    telegram_msg = format_shock_report(df_scored, exit_signals_text, effective_min_score)
     send_telegram_message(telegram_msg)
     print("S&P 500 Güvenlik Kalkanlı Rapor iletildi.")
 
