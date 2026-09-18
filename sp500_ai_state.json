@@ -12,5 +12,49 @@
         "flow": 0.45,
         "lambda": 0.1
     },
-    "status": "🏆 REJİM KORUMALI WALK-FORWARD ONAYLI (Win Rate: %49.45, PF: 1.19, Trades: 11589)"
+    "status": "🏆 REJİM KORUMALI WALK-FORWARD ONAYLI (Win Rate: %49.45, PF: 1.19, Trades: 11589)",
+    "autonomy_guard": {
+        "version": "1.0.0",
+        "mode": "NORMAL",
+        "exposure_multiplier": 1.0,
+        "signal_threshold_add": 0.0,
+        "block_new_entries": false,
+        "drift_score": 0.0,
+        "performance_drift": 0.0,
+        "ops_score": 100.0,
+        "regime_stress": 0.2,
+        "risk_score": 0.2,
+        "watch_streak": 0,
+        "safe_streak": 0,
+        "recovery_streak": 0,
+        "healthy_streak": 1,
+        "last_transition": null,
+        "last_evaluation": "2026-09-18T22:46:13.206070+00:00",
+        "reason": "HEALTHY",
+        "recent_regimes": [
+            "UNKNOWN"
+        ],
+        "feature_baseline": {},
+        "stress_test": {
+            "passed": true,
+            "version": "1.0.0",
+            "timestamp": "2026-09-18T22:46:13.204858+00:00",
+            "cases": 7,
+            "passed_cases": 7
+        },
+        "performance_detail": {
+            "samples": 191,
+            "recent_n": 20,
+            "baseline_n": 40,
+            "recent_mean": -1.0835,
+            "baseline_mean": -2.1915,
+            "recent_win_rate": 35.0,
+            "baseline_win_rate": 20.0
+        }
+    },
+    "autonomy": {
+        "version": "1.0.0",
+        "last_mode": "NORMAL",
+        "last_reason": "HEALTHY"
+    }
 }
