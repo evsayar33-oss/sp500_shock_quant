@@ -20,20 +20,21 @@
         "signal_threshold_add": 0.0,
         "block_new_entries": false,
         "drift_score": 0.0,
-        "performance_drift": 0.0,
+        "performance_drift": 0.0098,
         "ops_score": 100.0,
-        "regime_stress": 0.25,
-        "risk_score": 0.25,
+        "regime_stress": 0.45,
+        "risk_score": 0.45,
         "watch_streak": 0,
         "safe_streak": 0,
         "recovery_streak": 0,
-        "healthy_streak": 2,
+        "healthy_streak": 3,
         "last_transition": null,
-        "last_evaluation": "2026-09-21T19:18:55.932754+00:00",
+        "last_evaluation": "2026-09-21T23:30:06.919403+00:00",
         "reason": "HEALTHY",
         "recent_regimes": [
             "UNKNOWN",
-            "EXPANSION"
+            "EXPANSION",
+            "UNKNOWN"
         ],
         "feature_baseline": {
             "shock_score": {
@@ -121,18 +122,18 @@
         "stress_test": {
             "passed": true,
             "version": "1.0.0",
-            "timestamp": "2026-09-21T19:18:55.924116+00:00",
+            "timestamp": "2026-09-21T23:30:06.918000+00:00",
             "cases": 7,
             "passed_cases": 7
         },
         "performance_detail": {
-            "samples": 191,
+            "samples": 318,
             "recent_n": 20,
             "baseline_n": 40,
-            "recent_mean": -1.0835,
-            "baseline_mean": -2.1915,
-            "recent_win_rate": 35.0,
-            "baseline_win_rate": 20.0
+            "recent_mean": 0.257,
+            "baseline_mean": 0.4525,
+            "recent_win_rate": 45.0,
+            "baseline_win_rate": 45.0
         }
     },
     "autonomy": {
