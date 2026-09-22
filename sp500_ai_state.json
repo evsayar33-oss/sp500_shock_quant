@@ -19,110 +19,111 @@
         "exposure_multiplier": 1.0,
         "signal_threshold_add": 0.0,
         "block_new_entries": false,
-        "drift_score": 0.0,
+        "drift_score": 0.118,
         "performance_drift": 0.0098,
         "ops_score": 100.0,
-        "regime_stress": 0.45,
-        "risk_score": 0.45,
-        "watch_streak": 0,
+        "regime_stress": 0.8,
+        "risk_score": 0.8,
+        "watch_streak": 1,
         "safe_streak": 0,
         "recovery_streak": 0,
         "healthy_streak": 3,
         "last_transition": null,
-        "last_evaluation": "2026-09-21T23:30:06.919403+00:00",
-        "reason": "HEALTHY",
+        "last_evaluation": "2026-09-22T18:02:48.771039+00:00",
+        "reason": "WATCH_STRESS+REGIME_TRANSITION_STRESS",
         "recent_regimes": [
             "UNKNOWN",
             "EXPANSION",
-            "UNKNOWN"
+            "UNKNOWN",
+            "ROTATION"
         ],
         "feature_baseline": {
             "shock_score": {
-                "n": 400,
-                "mean": 34.04375,
-                "std": 30.426759,
-                "median": 35.6,
+                "n": 800,
+                "mean": 33.632675,
+                "std": 30.441717,
+                "median": 33.82,
                 "q25": 0.0,
-                "q75": 60.725,
-                "mad": 35.6
+                "q75": 60.28,
+                "mad": 33.82
             },
             "z_vol": {
-                "n": 400,
-                "mean": -0.951425,
-                "std": 0.828637,
-                "median": -1.17,
-                "q25": -1.43,
-                "q75": -0.685,
-                "mad": 0.31
+                "n": 800,
+                "mean": -0.955876,
+                "std": 0.841394,
+                "median": -1.17875,
+                "q25": -1.4385,
+                "q75": -0.696125,
+                "mad": 0.30975
             },
             "z_flow": {
-                "n": 400,
-                "mean": 1.417175,
-                "std": 1.270995,
-                "median": 1.38,
+                "n": 800,
+                "mean": 1.39702,
+                "std": 1.268946,
+                "median": 1.32925,
                 "q25": 0.0,
-                "q75": 2.5525,
-                "mad": 1.38
+                "q75": 2.524625,
+                "mad": 1.32925
             },
             "z_range": {
-                "n": 400,
-                "mean": 4.033025,
-                "std": 2.703356,
+                "n": 800,
+                "mean": 4.039313,
+                "std": 2.701126,
                 "median": 6.0,
-                "q25": 1.8,
+                "q25": 1.82775,
                 "q75": 6.0,
                 "mad": 0.0
             },
             "z_lambda": {
-                "n": 400,
-                "mean": 0.286575,
-                "std": 0.311239,
-                "median": 0.2,
-                "q25": 0.07,
-                "q75": 0.39,
+                "n": 800,
+                "mean": 0.286654,
+                "std": 0.31217,
+                "median": 0.199,
+                "q25": 0.0695,
+                "q75": 0.390625,
                 "mad": 0.14
             },
             "change_%": {
-                "n": 400,
-                "mean": 1.631405,
-                "std": 3.414965,
-                "median": 1.046588,
-                "q25": -0.234295,
-                "q75": 2.841144,
-                "mad": 1.475343
+                "n": 800,
+                "mean": 1.560538,
+                "std": 3.405532,
+                "median": 1.003318,
+                "q25": -0.28015,
+                "q75": 2.763062,
+                "mad": 1.460849
             },
             "rvol": {
-                "n": 400,
-                "mean": 0.637152,
-                "std": 0.576162,
-                "median": 0.530979,
-                "q25": 0.428827,
-                "q75": 0.7256,
-                "mad": 0.124308
+                "n": 800,
+                "mean": 0.637974,
+                "std": 0.602827,
+                "median": 0.52754,
+                "q25": 0.425437,
+                "q75": 0.721211,
+                "mad": 0.124171
             },
             "perf_1m": {
-                "n": 400,
-                "mean": -0.96207,
-                "std": 11.863935,
-                "median": -3.172617,
-                "q25": -7.646257,
-                "q75": 3.667532,
-                "mad": 5.675322
+                "n": 800,
+                "mean": -0.972985,
+                "std": 11.889385,
+                "median": -3.187831,
+                "q25": -7.664881,
+                "q75": 3.664698,
+                "mad": 5.672241
             },
             "perf_3m": {
-                "n": 400,
-                "mean": 4.96294,
-                "std": 26.624832,
-                "median": 0.518803,
-                "q25": -9.956611,
-                "q75": 15.576686,
-                "mad": 12.178109
+                "n": 800,
+                "mean": 4.972596,
+                "std": 26.664033,
+                "median": 0.485202,
+                "q25": -9.962355,
+                "q75": 15.567257,
+                "mad": 12.171274
             }
         },
         "stress_test": {
             "passed": true,
             "version": "1.0.0",
-            "timestamp": "2026-09-21T23:30:06.918000+00:00",
+            "timestamp": "2026-09-22T18:02:48.763913+00:00",
             "cases": 7,
             "passed_cases": 7
         },
@@ -139,6 +140,6 @@
     "autonomy": {
         "version": "1.0.0",
         "last_mode": "NORMAL",
-        "last_reason": "HEALTHY"
+        "last_reason": "WATCH_STRESS+REGIME_TRANSITION_STRESS"
     }
 }
