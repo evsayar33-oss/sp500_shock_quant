@@ -236,7 +236,8 @@ def main():
         min_rows=100,
         project="sp500_shock",
     )
-    effective_min_score = float(min_score) + float(guard_result.get("signal_threshold_add", 0.0))
+    wr_threshold = float(guard_state.get("win_rate_optimizer", {}).get("active_threshold", min_score))
+    effective_min_score = max(float(min_score), wr_threshold) + float(guard_result.get("signal_threshold_add", 0.0))
     if guard_result.get("block_new_entries"):
         effective_min_score = 101.0
     with open(AI_STATE_FILE, "w", encoding="utf-8") as f:

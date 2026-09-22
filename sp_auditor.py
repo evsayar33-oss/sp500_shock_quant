@@ -6,6 +6,7 @@ import json
 from datetime import datetime
 from sp_fetcher import get_sp500_raw_data
 from autonomy_guard import evaluate_autonomy_guard
+from win_rate_optimizer import optimize_win_rate, summary as winrate_optimizer_summary
 
 AI_STATE_FILE = "sp500_ai_state.json"
 LEDGER_FILE = "backtest_ledger.csv"
@@ -133,12 +134,19 @@ def run_evening_audit():
         except Exception:
             state = {}
 
+    state = optimize_win_rate(
+        state, completed,
+        current_threshold=float(state.get("win_rate_optimizer", {}).get("active_threshold", state.get("thresholds", {}).get("min_score", 75.0))),
+    )
+    state["winrate_optimizer_status"] = winrate_optimizer_summary(state)
+
     backtest_msg = ""
     if completed_count >= MIN_BACKTEST_SAMPLES:
         best_p, win_r = run_grid_search_backtest(completed)
         if best_p:
             # Merge legacy calibration into the existing state; autonomy_guard is preserved.
-            state["thresholds"] = {"th_vol": 1.5, "th_range": 1.4, "th_flow": 2.0, "th_lambda": 1.0, "min_score": best_p['min_score']}
+            wr_threshold = float(state.get("win_rate_optimizer", {}).get("active_threshold", 75.0))
+            state["thresholds"] = {"th_vol": 1.5, "th_range": 1.4, "th_flow": 2.0, "th_lambda": 1.0, "min_score": max(float(best_p['min_score']), wr_threshold)}
             state["weights"] = {"vol": best_p['vol'], "range": best_p['range'], "flow": best_p['flow'], "lambda": best_p['lambda']}
             state["status"] = f"🏆 REJİM KORUMALI BACKTEST ONAYLI (Win Rate: %{win_r:.1f})"
             backtest_msg = (
