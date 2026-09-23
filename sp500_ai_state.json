@@ -19,17 +19,17 @@
         "exposure_multiplier": 0.6,
         "signal_threshold_add": 5.0,
         "block_new_entries": false,
-        "drift_score": 0.2013,
-        "performance_drift": 0.0,
+        "drift_score": 0.0,
+        "performance_drift": 0.2775,
         "ops_score": 100.0,
-        "regime_stress": 0.8,
-        "risk_score": 0.8,
-        "watch_streak": 3,
+        "regime_stress": 0.75,
+        "risk_score": 0.75,
+        "watch_streak": 4,
         "safe_streak": 0,
         "recovery_streak": 0,
         "healthy_streak": 3,
         "last_transition": "2026-09-22T23:12:11.811707+00:00",
-        "last_evaluation": "2026-09-23T18:21:54.021130+00:00",
+        "last_evaluation": "2026-09-23T23:04:43.815475+00:00",
         "reason": "WATCH_STRESS+REGIME_TRANSITION_STRESS",
         "recent_regimes": [
             "UNKNOWN",
@@ -37,7 +37,8 @@
             "UNKNOWN",
             "ROTATION",
             "UNKNOWN",
-            "STRESS"
+            "STRESS",
+            "UNKNOWN"
         ],
         "feature_baseline": {
             "shock_score": {
@@ -125,18 +126,18 @@
         "stress_test": {
             "passed": true,
             "version": "1.0.0",
-            "timestamp": "2026-09-23T18:21:54.012143+00:00",
+            "timestamp": "2026-09-23T23:04:43.814838+00:00",
             "cases": 7,
             "passed_cases": 7
         },
         "performance_detail": {
-            "samples": 374,
+            "samples": 413,
             "recent_n": 20,
             "baseline_n": 40,
-            "recent_mean": 3.3335,
-            "baseline_mean": 0.1205,
-            "recent_win_rate": 65.0,
-            "baseline_win_rate": 47.5
+            "recent_mean": 0.7375,
+            "baseline_mean": 2.7797,
+            "recent_win_rate": 60.0,
+            "baseline_win_rate": 70.0
         }
     },
     "autonomy": {
@@ -151,99 +152,99 @@
         "return_col": "return_d5",
         "outcome_col": "entry_status",
         "baseline_threshold": 75.0,
-        "last_run": "2026-09-22T23:12:11.762208Z",
+        "last_run": "2026-09-23T23:04:43.787679Z",
         "walk_forward_folds": [
             {
                 "train_start": "2026-09-08",
-                "train_end": "2026-09-09",
-                "test_start": "2026-09-10",
-                "test_end": "2026-09-11",
+                "train_end": "2026-09-10",
+                "test_start": "2026-09-11",
+                "test_end": "2026-09-14",
                 "selected_threshold": 75.0,
                 "train": {
-                    "n": 41,
-                    "wins": 9,
-                    "win_rate": 21.95,
-                    "wilson_lcb": 14.84,
-                    "pf": 0.0811,
-                    "avg_return": -6.562
+                    "n": 59,
+                    "wins": 20,
+                    "win_rate": 33.9,
+                    "wilson_lcb": 26.53,
+                    "pf": 0.2002,
+                    "avg_return": -4.2559
                 },
                 "active_test": {
-                    "n": 61,
-                    "wins": 20,
-                    "win_rate": 32.79,
-                    "wilson_lcb": 25.62,
-                    "pf": 0.4367,
-                    "avg_return": -1.3579
+                    "n": 62,
+                    "wins": 15,
+                    "win_rate": 24.19,
+                    "wilson_lcb": 17.95,
+                    "pf": 0.3339,
+                    "avg_return": -2.1292
                 },
                 "candidate_test": {
-                    "n": 61,
-                    "wins": 20,
-                    "win_rate": 32.79,
-                    "wilson_lcb": 25.62,
-                    "pf": 0.4367,
-                    "avg_return": -1.3579
+                    "n": 62,
+                    "wins": 15,
+                    "win_rate": 24.19,
+                    "wilson_lcb": 17.95,
+                    "pf": 0.3339,
+                    "avg_return": -2.1292
                 }
             },
             {
                 "train_start": "2026-09-08",
-                "train_end": "2026-09-11",
-                "test_start": "2026-09-14",
-                "test_end": "2026-09-15",
+                "train_end": "2026-09-14",
+                "test_start": "2026-09-15",
+                "test_end": "2026-09-16",
                 "selected_threshold": 75.0,
                 "train": {
-                    "n": 102,
+                    "n": 121,
+                    "wins": 35,
+                    "win_rate": 28.93,
+                    "wilson_lcb": 23.95,
+                    "pf": 0.2519,
+                    "avg_return": -3.1662
+                },
+                "active_test": {
+                    "n": 68,
+                    "wins": 30,
+                    "win_rate": 44.12,
+                    "wilson_lcb": 36.63,
+                    "pf": 0.8241,
+                    "avg_return": -0.4651
+                },
+                "candidate_test": {
+                    "n": 68,
+                    "wins": 30,
+                    "win_rate": 44.12,
+                    "wilson_lcb": 36.63,
+                    "pf": 0.8241,
+                    "avg_return": -0.4651
+                }
+            },
+            {
+                "train_start": "2026-09-08",
+                "train_end": "2026-09-16",
+                "test_start": "2026-09-17",
+                "test_end": "2026-09-18",
+                "selected_threshold": 75.0,
+                "train": {
+                    "n": 189,
+                    "wins": 65,
+                    "win_rate": 34.39,
+                    "wilson_lcb": 30.12,
+                    "pf": 0.4006,
+                    "avg_return": -2.1944
+                },
+                "active_test": {
+                    "n": 43,
                     "wins": 29,
-                    "win_rate": 28.43,
-                    "wilson_lcb": 23.08,
-                    "pf": 0.2,
-                    "avg_return": -3.4497
-                },
-                "active_test": {
-                    "n": 56,
-                    "wins": 23,
-                    "win_rate": 41.07,
-                    "wilson_lcb": 33.02,
-                    "pf": 0.6955,
-                    "avg_return": -1.0032
+                    "win_rate": 67.44,
+                    "wilson_lcb": 57.79,
+                    "pf": 2.1074,
+                    "avg_return": 1.3549
                 },
                 "candidate_test": {
-                    "n": 56,
-                    "wins": 23,
-                    "win_rate": 41.07,
-                    "wilson_lcb": 33.02,
-                    "pf": 0.6955,
-                    "avg_return": -1.0032
-                }
-            },
-            {
-                "train_start": "2026-09-08",
-                "train_end": "2026-09-15",
-                "test_start": "2026-09-16",
-                "test_end": "2026-09-17",
-                "selected_threshold": 75.0,
-                "train": {
-                    "n": 158,
-                    "wins": 52,
-                    "win_rate": 32.91,
-                    "wilson_lcb": 28.32,
-                    "pf": 0.3464,
-                    "avg_return": -2.5826
-                },
-                "active_test": {
-                    "n": 51,
-                    "wins": 26,
-                    "win_rate": 50.98,
-                    "wilson_lcb": 42.12,
-                    "pf": 1.1645,
-                    "avg_return": 0.3153
-                },
-                "candidate_test": {
-                    "n": 51,
-                    "wins": 26,
-                    "win_rate": 50.98,
-                    "wilson_lcb": 42.12,
-                    "pf": 1.1645,
-                    "avg_return": 0.3153
+                    "n": 43,
+                    "wins": 29,
+                    "win_rate": 67.44,
+                    "wilson_lcb": 57.79,
+                    "pf": 2.1074,
+                    "avg_return": 1.3549
                 }
             }
         ],
@@ -254,24 +255,24 @@
         ],
         "candidate_threshold": 75.0,
         "active_oos": {
-            "n": 168,
-            "wins": 69,
-            "win_rate": 41.07,
-            "wilson_lcb": 36.32,
-            "pf": 0.7136,
-            "avg_return": -0.7317
+            "n": 173,
+            "wins": 74,
+            "win_rate": 42.77,
+            "wilson_lcb": 38.04,
+            "pf": 0.7553,
+            "avg_return": -0.6091
         },
         "candidate_oos": {
-            "n": 168,
-            "wins": 69,
-            "win_rate": 41.07,
-            "wilson_lcb": 36.32,
-            "pf": 0.7136,
-            "avg_return": -0.7317
+            "n": 173,
+            "wins": 74,
+            "win_rate": 42.77,
+            "wilson_lcb": 38.04,
+            "pf": 0.7553,
+            "avg_return": -0.6091
         },
         "decision_reason": "WIN_RATE_LIFT_TOO_SMALL (+0.00pp)",
         "active_threshold": 75.0,
         "status": "UNCHANGED"
     },
-    "winrate_optimizer_status": "UNCHANGED | threshold=75.0 | OOS WR=41.07% | LCB=36.32% | N=168"
+    "winrate_optimizer_status": "UNCHANGED | threshold=75.0 | OOS WR=42.77% | LCB=38.04% | N=173"
 }
