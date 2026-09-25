@@ -19,18 +19,18 @@
         "exposure_multiplier": 0.6,
         "signal_threshold_add": 5.0,
         "block_new_entries": false,
-        "drift_score": 0.0,
+        "drift_score": 0.1486,
         "performance_drift": 0.282,
         "ops_score": 100.0,
-        "regime_stress": 0.75,
-        "risk_score": 0.75,
+        "regime_stress": 0.55,
+        "risk_score": 0.55,
         "watch_streak": 6,
         "safe_streak": 0,
         "recovery_streak": 0,
         "healthy_streak": 3,
         "last_transition": "2026-09-22T23:12:11.811707+00:00",
-        "last_evaluation": "2026-09-24T23:20:42.371656+00:00",
-        "reason": "WATCH_STRESS+REGIME_TRANSITION_STRESS",
+        "last_evaluation": "2026-09-25T18:29:58.532958+00:00",
+        "reason": "HEALTHY",
         "recent_regimes": [
             "UNKNOWN",
             "EXPANSION",
@@ -40,95 +40,96 @@
             "STRESS",
             "UNKNOWN",
             "ROTATION",
-            "UNKNOWN"
+            "UNKNOWN",
+            "ROTATION"
         ],
         "feature_baseline": {
             "shock_score": {
-                "n": 1600,
-                "mean": 32.414089,
-                "std": 30.344938,
-                "median": 30.52255,
+                "n": 2000,
+                "mean": 32.216472,
+                "std": 30.340114,
+                "median": 30.313922,
                 "q25": 0.0,
-                "q75": 58.927388,
-                "mad": 30.52255
+                "q75": 58.752269,
+                "mad": 30.313922
             },
             "z_vol": {
-                "n": 1600,
-                "mean": -0.96399,
-                "std": 0.852836,
-                "median": -1.189121,
-                "q25": -1.449396,
-                "q75": -0.712534,
-                "mad": 0.31075
+                "n": 2000,
+                "mean": -0.977784,
+                "std": 0.847234,
+                "median": -1.199665,
+                "q25": -1.458426,
+                "q75": -0.731907,
+                "mad": 0.308213
             },
             "z_flow": {
-                "n": 1600,
-                "mean": 1.338106,
-                "std": 1.246531,
-                "median": 1.213098,
+                "n": 2000,
+                "mean": 1.324166,
+                "std": 1.241222,
+                "median": 1.184193,
                 "q25": 0.0,
-                "q75": 2.424093,
-                "mad": 1.213098
+                "q75": 2.400388,
+                "mad": 1.184193
             },
             "z_range": {
-                "n": 1600,
-                "mean": 4.030883,
-                "std": 2.702864,
+                "n": 2000,
+                "mean": 4.016283,
+                "std": 2.708696,
                 "median": 6.0,
-                "q25": 1.798931,
+                "q25": 1.760609,
                 "q75": 6.0,
                 "mad": 0.0
             },
             "z_lambda": {
-                "n": 1600,
-                "mean": 0.283861,
-                "std": 0.309351,
-                "median": 0.196623,
-                "q25": 0.068549,
-                "q75": 0.385808,
-                "mad": 0.138525
+                "n": 2000,
+                "mean": 0.282599,
+                "std": 0.307362,
+                "median": 0.195292,
+                "q25": 0.067622,
+                "q75": 0.385518,
+                "mad": 0.138599
             },
             "change_%": {
-                "n": 1600,
-                "mean": 1.363145,
-                "std": 3.314211,
-                "median": 0.865177,
-                "q25": -0.407726,
-                "q75": 2.561753,
-                "mad": 1.430436
+                "n": 2000,
+                "mean": 1.311373,
+                "std": 3.265463,
+                "median": 0.835058,
+                "q25": -0.426518,
+                "q75": 2.508375,
+                "mad": 1.41701
             },
             "rvol": {
-                "n": 1600,
-                "mean": 0.632914,
-                "std": 0.582867,
-                "median": 0.523452,
-                "q25": 0.420988,
-                "q75": 0.714566,
-                "mad": 0.124605
+                "n": 2000,
+                "mean": 0.626873,
+                "std": 0.573395,
+                "median": 0.519363,
+                "q25": 0.417373,
+                "q75": 0.7068,
+                "mad": 0.123527
             },
             "perf_1m": {
-                "n": 1600,
-                "mean": -1.00228,
-                "std": 11.997015,
-                "median": -3.268129,
-                "q25": -7.78521,
-                "q75": 3.706126,
-                "mad": 5.716751
+                "n": 2000,
+                "mean": -1.010071,
+                "std": 12.036806,
+                "median": -3.31347,
+                "q25": -7.826786,
+                "q75": 3.800403,
+                "mad": 5.751921
             },
             "perf_3m": {
-                "n": 1600,
-                "mean": 4.962087,
-                "std": 26.793317,
-                "median": 0.357565,
-                "q25": -10.111798,
-                "q75": 15.465375,
-                "mad": 12.17154
+                "n": 2000,
+                "mean": 4.920723,
+                "std": 26.822082,
+                "median": 0.25065,
+                "q25": -10.124251,
+                "q75": 15.26323,
+                "mad": 12.110795
             }
         },
         "stress_test": {
             "passed": true,
             "version": "1.0.0",
-            "timestamp": "2026-09-24T23:20:42.370299+00:00",
+            "timestamp": "2026-09-25T18:29:58.523873+00:00",
             "cases": 7,
             "passed_cases": 7
         },
@@ -145,7 +146,7 @@
     "autonomy": {
         "version": "1.0.0",
         "last_mode": "WATCH",
-        "last_reason": "WATCH_STRESS+REGIME_TRANSITION_STRESS"
+        "last_reason": "HEALTHY"
     },
     "win_rate_optimizer": {
         "version": "1.0.0",
