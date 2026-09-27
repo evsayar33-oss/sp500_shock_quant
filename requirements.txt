@@ -1,5 +1,6 @@
-pandas
-numpy
-requests
-streamlit
-yfinance
+requests>=2.31
+pandas>=2.1
+numpy>=1.26
+yfinance>=0.2.54
+lxml>=5.0
+streamlit>=1.36

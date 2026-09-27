@@ -1,163 +1,164 @@
+"""S&P 500 Adaptive Meta-Engine v2 — skor katmanı.
+
+Bu modüldeki `score_frame` hem canlı taramada hem walk-forward backtest'te hem de öğrenmede
+KULLANILAN TEK skor fonksiyonudur. Canlı skor ile geçmiş doğrulama arasında formül farkı yoktur.
+
+Mimari
+  1) features.py : gerçek z-skorlar, OHLCV birikim vekili, gap-riski, kesitsel aileler
+  2) regime.py   : kesitsel + makro rejim, eşik primi, maruziyet çarpanı
+  3) score_frame : rejime koşullu aile ağırlıkları (öğrenilmiş profil ⊕ rejim şablonu)
+  4) portfolio.py: volatilite hedefli boyut, korelasyon filtresi, brüt limit
+Fiyat yönü ana skoru üretmez; yalnızca uygunluk kapısıdır (change_% > 0).
+"""
+from __future__ import annotations
+
+import os
+
 import numpy as np
 import pandas as pd
-import os
-import warnings
 
-warnings.filterwarnings('ignore')
-GECMIS_DOSYA = "sp500_gecmis_veri.csv"
+import config as C
+from regime import classify_market_regime  # noqa: F401  (geri uyumluluk için yeniden dışa aktarım)
+
+GECMIS_DOSYA = C.GECMIS_DOSYA
+
+DEFAULT_META_WEIGHTS = {"event": 0.20, "flow": 0.25, "activity": 0.20, "liquidity": 0.15, "resilience": 0.20}
+
+REGIME_META_TEMPLATES = {
+    "CRASH":     {"event": 0.14, "flow": 0.24, "activity": 0.14, "liquidity": 0.12, "resilience": 0.36},
+    "STRESS":    {"event": 0.16, "flow": 0.25, "activity": 0.16, "liquidity": 0.13, "resilience": 0.30},
+    "ROTATION":  {"event": 0.16, "flow": 0.28, "activity": 0.18, "liquidity": 0.15, "resilience": 0.23},
+    "EXPANSION": {"event": 0.18, "flow": 0.31, "activity": 0.23, "liquidity": 0.15, "resilience": 0.13},
+    "QUIET":     {"event": 0.14, "flow": 0.24, "activity": 0.22, "liquidity": 0.20, "resilience": 0.20},
+    "NORMAL":    dict(DEFAULT_META_WEIGHTS),
+}
+
+REGIME_MIN_SCORES = {"CRASH": 88.0, "STRESS": 83.0, "ROTATION": 77.0, "EXPANSION": 74.0, "QUIET": 72.0, "NORMAL": 75.0}
+
+FAMILY_COLS = {"event": "event_score", "flow": "flow_score", "activity": "activity_score",
+               "liquidity": "liquidity_score", "resilience": "resilience_score"}
+
+# Geriye uyumluluk (eski sürüm importları kırılmasın)
+DEFAULT_THRESHOLDS = {"th_vol": 1.5, "th_range": 1.5, "th_flow": 2.0, "th_lambda": 1.2}
+DEFAULT_WEIGHTS = {"vol": 0.35, "flow": 0.35, "range": 0.20, "lambda": 0.10}
+
+
+def _num(value, default=0.0):
+    try:
+        value = float(value)
+        return default if not np.isfinite(value) else value
+    except Exception:
+        return default
+
+
+def normalize_weights(weights, fallback=None):
+    fallback = fallback or DEFAULT_META_WEIGHTS
+    out = {k: max(_num((weights or {}).get(k), fallback[k]), 0.0) for k in fallback}
+    total = sum(out.values())
+    return dict(fallback) if total <= 0 else {k: v / total for k, v in out.items()}
+
+
+def default_profile(regime="NORMAL"):
+    regime = str(regime).upper()
+    return {"weights": dict(REGIME_META_TEMPLATES.get(regime, DEFAULT_META_WEIGHTS)),
+            "min_score": REGIME_MIN_SCORES.get(regime, 75.0), "regime": regime, "version": 2}
+
+
+def default_profiles():
+    return {r: default_profile(r) for r in C.REGIMES}
+
+
+def runtime_weights(profile, regime, confidence):
+    """Öğrenilmiş profil ile rejim şablonunun güvene göre karışımı (canlı + backtest ortak)."""
+    template = REGIME_META_TEMPLATES.get(regime, DEFAULT_META_WEIGHTS)
+    learned = normalize_weights((profile or {}).get("weights", {}), template)
+    blend = 0.25 + 0.55 * float(np.clip(confidence, 0.0, 1.0))
+    return normalize_weights({k: (1 - blend) * learned[k] + blend * template[k] for k in DEFAULT_META_WEIGHTS}, template)
+
+
+def score_frame(df: pd.DataFrame, profiles: dict | None = None, threshold_offset: float = 0.0,
+                extra_threshold_add: float = 0.0) -> pd.DataFrame:
+    """Vektörel skor. df: features.build_features + attach_regime çıktısı (bir veya çok tarih)."""
+    if df is None or df.empty:
+        return pd.DataFrame() if df is None else df
+    profiles = profiles or {}
+    out = df.copy()
+    if "regime_label" not in out.columns:
+        out["regime_label"] = "NORMAL"
+    if "regime_confidence" not in out.columns:
+        out["regime_confidence"] = 0.35
+    if "macro_threshold_add" not in out.columns:
+        out["macro_threshold_add"] = 0.0
+
+    meta = pd.Series(0.0, index=out.index)
+    min_score = pd.Series(75.0, index=out.index)
+    wcols = {k: pd.Series(0.0, index=out.index) for k in DEFAULT_META_WEIGHTS}
+    for (reg, conf), idx in out.groupby(["regime_label", "regime_confidence"]).groups.items():
+        prof = profiles.get(reg) or default_profile(reg)
+        w = runtime_weights(prof, reg, conf)
+        part = out.loc[idx]
+        meta.loc[idx] = sum(part[FAMILY_COLS[k]].fillna(50.0) * w[k] for k in w)
+        min_score.loc[idx] = _num(prof.get("min_score"), REGIME_MIN_SCORES.get(reg, 75.0))
+        for k in w:
+            wcols[k].loc[idx] = w[k]
+
+    risk = out["overnight_risk"].fillna(100.0)
+    score = meta - ((risk - 65.0) * 0.18).clip(0.0, 10.0)
+    score -= np.where(out["is_downtrend_knife"].fillna(False), 15.0, 0.0)
+    exc_pos = out["excess_return"].fillna(0.0) > 0.0
+    score += np.where(out["regime_label"] == "CRASH", np.where(exc_pos, 5.0, -5.0), 0.0)
+    score += np.where(out["regime_label"] == "STRESS", np.where(exc_pos, 3.0, -2.0), 0.0)
+    score = score.clip(0.0, 99.5).round(1)
+
+    eff = (min_score + out["macro_threshold_add"].fillna(0.0) + float(threshold_offset) + float(extra_threshold_add))
+    out["meta_score"] = meta.clip(0, 99.5).round(1)
+    out["risk_adjusted_score"] = score
+    out["watch_score"] = score
+    out["confidence_score"] = score
+    out["shock_score"] = np.where(out["eligible"].fillna(False), score, 0.0)
+    out["effective_min_score"] = eff.clip(60.0, 101.0).round(1)
+    out["meta_selection"] = np.where(out["shock_score"] >= out["effective_min_score"], "SELECTED",
+                                     np.where(out["watch_score"] >= out["effective_min_score"] - 5.0, "WATCH", "REJECTED"))
+    out["meta_regime"] = out["regime_label"]
+    out["meta_regime_confidence"] = out["regime_confidence"]
+    for k in DEFAULT_META_WEIGHTS:
+        out[f"meta_weight_{k}"] = wcols[k].round(4)
+    out["non_price_score"] = (out["event_score"] * 0.30 + out["flow_score"] * 0.30
+                              + out["activity_score"] * 0.20 + out["liquidity_score"] * 0.20).round(1)
+    out["crash_resilient"] = (out["current_positive"] & exc_pos & (out["resilience_score"] >= 55.0)
+                              & (out["liquidity_score"] >= 35.0))
+    out["crash_survivor"] = out["crash_resilient"] & (out["resilience_score"] >= 70.0) & (out["rel_daily_pct"] >= 70.0)
+    return out
+
+
+def entry_status(row):
+    ch = _num(row.get("change_%"))
+    if 1.0 <= ch <= 4.5:
+        return "🎯 UYGUN GİRİŞ BÖLGESİ"
+    if ch > 6.0:
+        return "🔥 UZUN VADELİ DESTEK VAR" if _num(row.get("perf_1m")) > 0 and _num(row.get("perf_3m")) > 0 else "⚠️ UZAMIŞ HAREKET"
+    return "NORMAL GİRİŞ"
+
+
+def stars_for(row):
+    score, eff = _num(row.get("shock_score")), _num(row.get("effective_min_score"), 75.0)
+    if score < eff:
+        return "⭐"
+    res, risk = _num(row.get("resilience_score")), _num(row.get("overnight_risk"), 100.0)
+    if score >= eff + 8.0 and res >= 70.0 and risk < 62.0:
+        return "⭐⭐⭐⭐⭐"
+    if res >= 55.0 and risk < 72.0:
+        return "⭐⭐⭐⭐"
+    return "⭐⭐⭐"
+
 
 def gecmis_veriyi_yukle():
-    if os.path.exists(GECMIS_DOSYA):
-        try:
-            df = pd.read_csv(GECMIS_DOSYA)
-            if 'tarih' in df.columns:
-                df['tarih'] = pd.to_datetime(df['tarih'])
-            return df
-        except: 
-            return pd.DataFrame()
-    return pd.DataFrame()
-
-def calculate_shock_scores(df, df_gecmis, dynamic_thresholds=None, dynamic_weights=None):
-    if df.empty: 
+    if not os.path.exists(GECMIS_DOSYA):
+        return pd.DataFrame()
+    try:
+        df = pd.read_csv(GECMIS_DOSYA)
+        if "tarih" in df.columns:
+            df["tarih"] = pd.to_datetime(df["tarih"], errors="coerce")
         return df
-
-    if dynamic_thresholds is None:
-        dynamic_thresholds = {"th_vol": 1.5, "th_range": 1.4, "th_flow": 2.0, "th_lambda": 1.0}
-    if dynamic_weights is None:
-        dynamic_weights = {"vol": 0.20, "range": 0.25, "flow": 0.45, "lambda": 0.10}
-
-    scored_data = []
-
-    for idx, row in df.iterrows():
-        item = row.to_dict()
-        
-        close = float(item.get('close', 0.0))
-        open_p = float(item.get('open', close))
-        high = float(item.get('high', close))
-        low = float(item.get('low', close))
-        change = float(item.get('change_%', 0.0))
-        value_traded = float(item.get('value_traded', 0.0))
-        rvol = float(item.get('rvol', 1.0))
-        atr = float(item.get('atr', 1.0))
-        perf_1m = float(item.get('perf_1m', 0.0))
-        perf_3m = float(item.get('perf_3m', 0.0))
-        vwap = float(item.get('vwap', 0.0))
-
-        # 1. VWAP KONTROLÜ (Gün içi kurumsal maliyet üstünde mi?)
-        is_below_vwap = False
-        if vwap > 0 and close < (vwap * 0.994):
-            is_below_vwap = True
-
-        # 2. Z-SKORLAR
-        z_vol = round(min(max(float((rvol - 1.0) * 2.5), -2.0), 6.0), 2)
-        today_range = high - low
-        safe_atr = max(atr, 0.01)
-        z_range = round(min(max(float(((today_range / safe_atr) - 1.0) * 2.5), -2.0), 6.0), 2)
-
-        liquidity_damping = min(value_traded / 50000000.0, 1.0) if value_traded > 0 else 0.0
-        raw_lambda = ((abs(change) / ((value_traded / 25000000.0) + 1e-9)) * liquidity_damping) if value_traded > 0 else 0.0
-        z_lambda = round(min(float(np.log1p(raw_lambda) * 2.0), 5.0), 2)
-
-        if today_range > 0:
-            clv = ((close - low) - (high - close)) / today_range
-            body_eff = (close - open_p) / today_range
-        else:
-            clv = 0.0
-            body_eff = 0.0
-        aggressor_flow = (max(clv, 0.0) * 0.55) + (max(body_eff, 0.0) * 0.45)
-        z_flow = round(float(aggressor_flow * 4.0), 2)
-
-        # 3. GİRİŞ MARJI (SWEET SPOT: %1.5 ile %4.5 arası)
-        entry_bonus = 0.0
-        if 1.5 <= change <= 4.5:
-            entry_bonus = 6.0
-            entry_status = "🎯 İDEAL GİRİŞ BÖLGESİ"
-        elif change >= 6.5:
-            entry_bonus = -8.0
-            entry_status = "⚠️ GEÇ KALINDI (Tepeden Alım Riski)"
-        else:
-            entry_status = "NORMAL GİRİŞ"
-
-        shock_count = 0
-        if z_vol >= dynamic_thresholds.get('th_vol', 1.5): shock_count += 1
-        if z_range >= dynamic_thresholds.get('th_range', 1.4): shock_count += 1
-        if z_lambda >= dynamic_thresholds.get('th_lambda', 1.0): shock_count += 1
-        if z_flow >= dynamic_thresholds.get('th_flow', 2.0): shock_count += 1
-
-        concordance_multiplier = 1.0 + (shock_count * 0.25)
-        is_fresh_shock = (perf_1m <= 18.0) and (perf_3m >= -15.0)
-        is_downtrend_knife = (perf_3m < -25.0) and (z_vol < 2.5)
-
-        item['z_vol'] = z_vol
-        item['z_range'] = z_range
-        item['z_lambda'] = z_lambda
-        item['z_flow'] = z_flow
-        item['shock_count'] = shock_count
-        item['concordance_mult'] = concordance_multiplier
-        item['entry_bonus'] = entry_bonus
-        item['entry_status'] = entry_status
-        item['is_fresh_shock'] = is_fresh_shock
-        item['is_downtrend_knife'] = is_downtrend_knife
-        item['is_below_vwap'] = is_below_vwap
-        scored_data.append(item)
-
-    res_df = pd.DataFrame(scored_data)
-    if res_df.empty: 
-        return res_df
-
-    res_df['pct_vol'] = res_df['z_vol'].rank(pct=True) * 100.0
-    res_df['pct_range'] = res_df['z_range'].rank(pct=True) * 100.0
-    res_df['pct_lambda'] = res_df['z_lambda'].rank(pct=True) * 100.0
-    res_df['pct_flow'] = res_df['z_flow'].rank(pct=True) * 100.0
-
-    w_v = dynamic_weights.get('vol', 0.25)
-    w_r = dynamic_weights.get('range', 0.25)
-    w_f = dynamic_weights.get('flow', 0.35)
-    w_l = dynamic_weights.get('lambda', 0.15)
-
-    base_score = (
-        res_df['pct_vol'] * w_v +
-        res_df['pct_range'] * w_r +
-        res_df['pct_flow'] * w_f +
-        res_df['pct_lambda'] * w_l
-    ) * (res_df['concordance_mult'] / 1.5)
-
-    raw_confidence = base_score + res_df['entry_bonus']
-    final_score = np.clip(np.round(raw_confidence, 1), 0.0, 99.5)
-
-    res_df['shock_score'] = np.where(
-        (res_df['change_%'] > 0) & (~res_df['is_downtrend_knife']) & (~res_df['is_below_vwap']),
-        final_score,
-        0.0
-    )
-    res_df['confidence_score'] = res_df['shock_score']
-
-    # KASA DAĞILIMI (POSITION SIZING)
-    def assign_allocation(row):
-        score = row['shock_score']
-        chg = row['change_%']
-        if score >= 85.0 and chg <= 5.5:
-            return "⭐⭐⭐⭐⭐", "Portföyün %15 - %20'si (Yüksek Kurumsal Güven)"
-        elif score >= 75.0:
-            return "⭐⭐⭐⭐", "Portföyün %8 - %12'si (Dengeli Pozisyon)"
-        elif score >= 65.0:
-            return "⭐⭐⭐", "Portföyün %3 - %5'i (Deneme / Küçük Kasa)"
-        else:
-            return "⭐", "İşlem Açma (Yetersiz Güven)"
-
-    stars_alloc = [assign_allocation(r) for _, r in res_df.iterrows()]
-    res_df['stars'] = [sa[0] for sa in stars_alloc]
-    res_df['allocation'] = [sa[1] for sa in stars_alloc]
-
-    drop_cols = ['pct_vol', 'pct_range', 'pct_lambda', 'pct_flow', 'concordance_mult', 'is_downtrend_knife', 'is_below_vwap', 'entry_bonus']
-    res_df = res_df.drop(columns=[col for col in drop_cols if col in res_df.columns])
-
-    return res_df.sort_values(by='shock_score', ascending=False).reset_index(drop=True)
-
-def calculate_dynamic_kelly_allocation(shock_score: float, base_alloc: float = 6.8) -> float:
-    """Calculates Quarter Fractional Kelly allocation for S&P 500 based on shock score."""
-    if shock_score < 75.0:
-        return 0.0
-    scale = (shock_score / 75.0) ** 1.5
-    alloc = round(min(max(base_alloc * scale, 6.0), 12.0), 1)
-    return alloc
+    except Exception:
+        return pd.DataFrame()

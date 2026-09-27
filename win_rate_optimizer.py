@@ -1,4 +1,12 @@
-"""Project-local Win-Rate Optimizer V1.
+"""Project-local Win-Rate Optimizer V2 (embargo + net getiri).
+
+v2 değişiklikleri:
+* Girdi artık walk-forward OOS aday havuzudur (shock_learner.walk_forward -> pool);
+  signal_score = skor - rejim eşiği + 75 olarak normalize edilir, dolayısıyla bulunan
+  "active_threshold - 75" değeri tüm rejim eşiklerine eklenen global OFSETtir.
+* realized_5d = T+1 açılış -> T+5 kapanış NET getiri (maliyet düşülmüş).
+* Eğitim ve test dilimleri arasında embargo (HORIZON+1 gün) vardır.
+
 
 Primary objective: improve out-of-sample win rate.
 Safety constraints: minimum sample, Wilson lower bound, and (when returns exist)
@@ -19,19 +27,20 @@ import pandas as pd
 
 
 PROJECT = 'sp500_shock'
-SCORE_COL = 'initial_score'
-RETURN_COL = 'return_d5'
-OUTCOME_COL = 'entry_status'
-DATE_COL = 'date'
+SCORE_COL = 'signal_score'
+RETURN_COL = 'realized_5d'
+OUTCOME_COL = 'meta_selection'
+DATE_COL = 'tarih'
 DEFAULT_THRESHOLD = 75.0
-initial_score = "initial_score"
-return_d5 = "return_d5"
-entry_status = "entry_status"
-date = "date"
+signal_score = "signal_score"
+realized_5d = "realized_5d"
+meta_selection = "meta_selection"
+tarih = "tarih"
 
-MIN_TOTAL_SAMPLES = 60
-MIN_TRAIN_SAMPLES = 40
-MIN_TEST_SAMPLES = 20
+MIN_TOTAL_SAMPLES = 200
+MIN_TRAIN_SAMPLES = 80
+MIN_TEST_SAMPLES = 40
+EMBARGO_DAYS = 6
 MIN_TEST_WIN_LIFT = 0.02          # +2.0 percentage points
 MIN_LCB_LIFT = 0.015              # +1.5 percentage points
 MIN_PF_RATIO = 0.90               # PF cannot fall >10% vs active
@@ -61,29 +70,29 @@ def _prepare(df: pd.DataFrame) -> pd.DataFrame:
     if df is None or df.empty:
         return pd.DataFrame()
     out = df.copy()
-    if date not in out.columns or initial_score not in out.columns:
+    if tarih not in out.columns or signal_score not in out.columns:
         return pd.DataFrame()
-    out[date] = pd.to_datetime(out[date], errors="coerce").dt.normalize()
-    out[initial_score] = pd.to_numeric(out[initial_score], errors="coerce")
-    out = out.dropna(subset=[date, initial_score]).sort_values(date).copy()
+    out[tarih] = pd.to_datetime(out[tarih], errors="coerce").dt.normalize()
+    out[signal_score] = pd.to_numeric(out[signal_score], errors="coerce")
+    out = out.dropna(subset=[tarih, signal_score]).sort_values(tarih).copy()
     return out
 
 
 def _wins_mask(df: pd.DataFrame) -> pd.Series:
-    if return_d5 in df.columns:
-        r = pd.to_numeric(df[return_d5], errors="coerce")
+    if realized_5d in df.columns:
+        r = pd.to_numeric(df[realized_5d], errors="coerce")
         return r.notna() & (r > 0.0)
-    if entry_status in df.columns:
-        s = df[entry_status].astype(str).str.upper()
+    if meta_selection in df.columns:
+        s = df[meta_selection].astype(str).str.upper()
         return s.str.startswith("WIN")
     return pd.Series(False, index=df.index)
 
 
 def _resolved_mask(df: pd.DataFrame) -> pd.Series:
-    if return_d5 in df.columns:
-        return pd.to_numeric(df[return_d5], errors="coerce").notna()
-    if entry_status in df.columns:
-        s = df[entry_status].astype(str).str.upper()
+    if realized_5d in df.columns:
+        return pd.to_numeric(df[realized_5d], errors="coerce").notna()
+    if meta_selection in df.columns:
+        s = df[meta_selection].astype(str).str.upper()
         return s.isin({"WIN", "LOSS", "FAIL", "FAILED", "TIMEOUT_DEAD_INCUBATION", "FAIL_BASE_BREAKDOWN"}) | s.str.startswith("WIN")
     return pd.Series(False, index=df.index)
 
@@ -91,7 +100,7 @@ def _resolved_mask(df: pd.DataFrame) -> pd.Series:
 def _metrics(df: pd.DataFrame, threshold: float) -> Dict:
     if df.empty:
         return {"n": 0, "wins": 0, "win_rate": 0.0, "wilson_lcb": 0.0, "pf": None, "avg_return": None}
-    sel = df[pd.to_numeric(df[initial_score], errors="coerce") >= float(threshold)].copy()
+    sel = df[pd.to_numeric(df[signal_score], errors="coerce") >= float(threshold)].copy()
     resolved = _resolved_mask(sel)
     sel = sel[resolved].copy()
     n = int(len(sel))
@@ -107,8 +116,8 @@ def _metrics(df: pd.DataFrame, threshold: float) -> Dict:
         "pf": None,
         "avg_return": None,
     }
-    if return_d5 in sel.columns:
-        ret = pd.to_numeric(sel[return_d5], errors="coerce").dropna()
+    if realized_5d in sel.columns:
+        ret = pd.to_numeric(sel[realized_5d], errors="coerce").dropna()
         if not ret.empty:
             gains = float(ret[ret > 0].sum())
             losses = float(abs(ret[ret < 0].sum()))
@@ -119,7 +128,7 @@ def _metrics(df: pd.DataFrame, threshold: float) -> Dict:
 
 def _candidate_thresholds(current: float) -> list[float]:
     c = float(np.clip(current, 1.0, 99.0))
-    vals = [c - 8, c - 5, c - 3, c, c + 3, c + 5, c + 8]
+    vals = [c - 6, c - 4, c - 2, c, c + 2, c + 4, c + 6, c + 8]
     return sorted({round(float(np.clip(v, 1.0, 99.0)), 1) for v in vals})
 
 
@@ -140,7 +149,7 @@ def _select_training_threshold(train: pd.DataFrame, current: float) -> Tuple[flo
 
 
 def _walk_forward(df: pd.DataFrame, current_threshold: float) -> Dict:
-    dates = sorted(df[date].dropna().unique())
+    dates = sorted(df[tarih].dropna().unique())
     if len(df) < MIN_TOTAL_SAMPLES or len(dates) < 6:
         return {"ok": False, "reason": "WARMUP", "folds": []}
 
@@ -149,18 +158,20 @@ def _walk_forward(df: pd.DataFrame, current_threshold: float) -> Dict:
     for i in range(1, len(chunks)):
         train_dates = np.concatenate(chunks[:i]) if i > 0 else np.array([])
         test_dates = chunks[i]
-        train = df[df[date].isin(train_dates)]
-        test = df[df[date].isin(test_dates)]
+        if len(train_dates) > EMBARGO_DAYS:
+            train_dates = train_dates[:-EMBARGO_DAYS]  # etiket örtüşmesine karşı embargo
+        train = df[df[tarih].isin(train_dates)]
+        test = df[df[tarih].isin(test_dates)]
         if len(train) < MIN_TRAIN_SAMPLES or len(test) < MIN_TEST_SAMPLES:
             continue
         picked, train_m = _select_training_threshold(train, current_threshold)
         active_test = _metrics(test, current_threshold)
         candidate_test = _metrics(test, picked)
         folds.append({
-            "train_start": str(pd.Timestamp(train[date].min()).date()),
-            "train_end": str(pd.Timestamp(train[date].max()).date()),
-            "test_start": str(pd.Timestamp(test[date].min()).date()),
-            "test_end": str(pd.Timestamp(test[date].max()).date()),
+            "train_start": str(pd.Timestamp(train[tarih].min()).date()),
+            "train_end": str(pd.Timestamp(train[tarih].max()).date()),
+            "test_start": str(pd.Timestamp(test[tarih].min()).date()),
+            "test_end": str(pd.Timestamp(test[tarih].max()).date()),
             "selected_threshold": picked,
             "train": train_m,
             "active_test": active_test,
@@ -173,7 +184,7 @@ def _walk_forward(df: pd.DataFrame, current_threshold: float) -> Dict:
     selected = [f["selected_threshold"] for f in folds]
     stable_threshold = round(float(np.median(selected)), 1)
     oos_dates = [d for f, ch in zip(folds, chunks[1:]) for d in ch]
-    oos = df[df[date].isin(oos_dates)].copy()
+    oos = df[df[tarih].isin(oos_dates)].copy()
     active = _metrics(oos, current_threshold)
     candidate = _metrics(oos, stable_threshold)
 
@@ -213,11 +224,11 @@ def optimize_win_rate(state: Dict, data: pd.DataFrame, *, current_threshold: Opt
     result = _walk_forward(df, current)
 
     wo = state.setdefault("win_rate_optimizer", {})
-    wo.setdefault("version", "1.0.0")
+    wo["version"] = "2.0.0"
     wo["objective"] = "MAX_OOS_WIN_RATE_WITH_RISK_CONSTRAINTS"
-    wo["score_col"] = initial_score
-    wo["return_col"] = return_d5 if return_d5 in (data.columns if isinstance(data, pd.DataFrame) else []) else None
-    wo["outcome_col"] = entry_status if entry_status in (data.columns if isinstance(data, pd.DataFrame) else []) else None
+    wo["score_col"] = signal_score
+    wo["return_col"] = realized_5d if realized_5d in (data.columns if isinstance(data, pd.DataFrame) else []) else None
+    wo["outcome_col"] = meta_selection if meta_selection in (data.columns if isinstance(data, pd.DataFrame) else []) else None
     wo["baseline_threshold"] = round(current, 1)
     wo["last_run"] = datetime.utcnow().isoformat() + "Z"
 
