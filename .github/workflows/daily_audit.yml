@@ -1,57 +1,59 @@
-name: SP500 Adaptive Evening Audit
+name: SP500 v2 Haftalik Tam Veri Yenileme
+
+# Cumartesi: S&P 500 bilesen listesi, 3 yillik panel, makro seriler ve bilanco tarihleri bastan indirilir,
+# ardindan ogrenme denetimini tam veriyle yeniden calistirir.
+# Ilk kurulumdan sonra bunu Actions sekmesinden bir kez elle calistirmaniz onerilir.
 
 on:
   schedule:
-    # Hafta içi her gün New York 16:35 (DST-aware, kapanıştan sonra)
-    - cron: '35 16 * * 1-5'
-      timezone: 'America/New_York'
+    - cron: '0 7 * * 6'
   workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: sp500-meta-audit
+  group: sp500-v2-pipeline
   cancel-in-progress: false
 
 jobs:
-  audit:
+  refresh:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-
+    timeout-minutes: 60
     steps:
-      - name: Repoyu Klonla
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Python Kurulumu
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
+          cache: 'pip'
 
       - name: Paketleri Yukle
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Adaptive Meta Audit Calistir
+      - name: Tam Backfill (3 yil)
+        env:
+          TZ: America/New_York
+        run: python price_history.py --full
+
+      - name: Ogrenme Denetimi
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
           TZ: America/New_York
-        run: |
-          echo "========================================"
-          echo "ADAPTIVE S&P 500 EVENING AUDIT"
-          echo "UTC : $(date -u '+%Y-%m-%d %H:%M:%S')"
-          echo "NY  : $(TZ=America/New_York date '+%Y-%m-%d %H:%M:%S %Z')"
-          echo "========================================"
-          python sp_auditor.py
+        run: python sp_auditor.py
 
-      - name: Ledger ve AI State Kaydet
+      - name: Kaydet
         run: |
-          git config --global user.name "SP500-QuantBot"
+          git config --global user.name "QuantBot-SP500"
           git config --global user.email "bot@sp500.local"
           git add -A
-          git diff-index --quiet HEAD || (
-            git commit -m "🧠 Auto-Calibration: S&P 500 Meta Engine"
-            git push
-          )
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "📥 SP500 v2 haftalik veri yenileme"
+          for i in 1 2 3; do
+            git pull --rebase -X theirs && git push && exit 0
+            sleep 5
+          done
+          exit 1
