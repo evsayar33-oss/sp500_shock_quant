@@ -21,10 +21,12 @@ import pandas as pd
 import requests
 
 import config as C
+import report
 from autonomy_guard import evaluate_autonomy_guard
 from price_history import (append_live_bar, load_earnings, load_members, load_sectors, merge_universe,
                            refresh_constituents, update_earnings, update_incremental, update_macro)
 from features import attach_regime, build_features, correlation_matrix
+from meta_label import predict as meta_predict, select_with_meta
 from portfolio import build_portfolio
 from sector_flow import group_names, sector_board
 from regime import compute_macro_frame
@@ -40,28 +42,7 @@ LIVE_LOOKBACK_DAYS = 300   # kümeler için >= CLUSTER_LOOKBACK + 1 ay
 # Telegram
 # ------------------------------------------------------------------
 def send_telegram_message(message):
-    token, chat_id = os.environ.get("TELEGRAM_TOKEN"), os.environ.get("CHAT_ID")
-    if not token or not chat_id:
-        print(message)
-        return
-    url = f"https://api.telegram.org/bot{token}/sendMessage"
-    parts, cur = [], ""
-    for block in message.split("\n\n"):
-        if len(cur) + len(block) + 2 > 3800 and cur.strip():
-            parts.append(cur.strip())
-            cur = ""
-        cur += block + "\n\n"
-    if cur.strip():
-        parts.append(cur.strip())
-    for msg in parts:
-        payload = {"chat_id": chat_id, "text": msg, "parse_mode": "HTML", "disable_web_page_preview": True}
-        try:
-            res = requests.post(url, json=payload, timeout=15)
-            if not res.json().get("ok"):
-                payload.pop("parse_mode", None)
-                requests.post(url, json=payload, timeout=15)
-        except Exception as exc:
-            print(f"Telegram hatası: {exc}")
+    report.send(message)
 
 
 # ------------------------------------------------------------------
@@ -205,102 +186,33 @@ def record_ledger_entries(ledger, portfolio_df, day):
     return pd.concat([ledger, new], ignore_index=True, sort=False)
 
 
-def exit_engine_text(ledger, panel):
+def exit_rows(ledger, panel):
+    """Açık/bekleyen pozisyonların durumu (rapor ve panel için yapısal liste)."""
+    rows = []
     if ledger.empty or panel.empty:
-        return ""
+        return rows
     lv = pd.to_numeric(ledger.get("label_version"), errors="coerce")
-    open_pos = ledger[(lv == 2) & (ledger["is_completed"] == 0)]
+    open_pos = ledger[(lv == 2) & (pd.to_numeric(ledger["is_completed"], errors="coerce").fillna(0) == 0)]
     if open_pos.empty:
-        return ""
+        return rows
     last_day = panel["tarih"].max()
     today = panel[panel["tarih"] == last_day].set_index("ticker")
     cal = pd.DatetimeIndex(sorted(panel["tarih"].unique()))
-    lines = []
     for _, r in open_pos.iterrows():
         t = r["ticker"]
         if pd.isna(r.get("entry_price")):
-            lines.append(f"⏳ <b>#{t}</b> — giriş bekleniyor (sinyal {r['date']}, sonraki seans AÇILIŞINDA al, ağırlık %{float(r.get('weight_pct', 0)):.1f})")
+            rows.append({"ticker": t, "status": "PENDING", "weight": r.get("weight_pct")})
             continue
         if t not in today.index:
             continue
-        entry = float(r["entry_price"])
-        cur = float(today.at[t, "close"])
-        low = float(today.at[t, "low"])
+        entry, cur, low = float(r["entry_price"]), float(today.at[t, "close"]), float(today.at[t, "low"])
         atr = float(r.get("atr") or 0.0)
         stop = entry - C.STOP_ATR * atr if atr > 0 else entry * 0.93
         held = int(((cal >= pd.Timestamp(r["entry_date"])) & (cal <= last_day)).sum())
-        pnl = (cur / entry - 1.0) * 100.0
-        if low <= stop:
-            lines.append(f"🚨 <b>#{t} FELAKET STOPU</b> (${stop:.2f}) kırıldı | K/Z %{pnl:+.2f} → sonraki açılışta çık")
-        elif held >= C.HORIZON:
-            lines.append(f"⏰ <b>#{t} VADE DOLDU</b> ({held}/{C.HORIZON}) | K/Z %{pnl:+.2f} → kapanışta çıkılmış sayılır")
-        else:
-            lines.append(f"🟢 <b>#{t}</b> {held}/{C.HORIZON}. gün | K/Z %{pnl:+.2f} | stop ${stop:.2f}")
-    if not lines:
-        return ""
-    return "🛡️ <b>AÇIK / BEKLEYEN POZİSYONLAR</b>\n" + "\n".join(lines) + "\n━━━━━━━━━━━━━━━━━━━━\n\n"
-
-
-# ------------------------------------------------------------------
-# Rapor
-# ------------------------------------------------------------------
-def format_board(board):
-    """Sektör/grup akış panosu: kurumsal birikimin ve dağıtımın grup düzeyindeki izi."""
-    if board is None or board.empty:
-        return ""
-    txt = "🧭 <b>SEKTÖR / GRUP AKIŞ PANOSU</b>\n"
-    for side, icon in (("BİRİKİM", "🟢"), ("GÖRECE GÜÇLÜ", "🟡"), ("DAĞITIM", "🔴")):
-        part = board[board["side"] == side]
-        if part.empty:
-            continue
-        txt += f"<i>{side}</i>\n"
-        for _, b in part.iterrows():
-            tag = " 🕵️ sessiz birikim" if side == "BİRİKİM" and b["stealth"] >= 0.35 else ""
-            txt += (f"{icon} G{int(b['grp'])} <b>{b['name']}</b> ({int(b['n'])}) | CMF {b['sec_cmf']:+.2f} | "
-                    f"genişlik %{b['sec_acc'] * 100:.0f} | 20g %{b['sec_ret20']:+.1f}{tag}\n")
-    return txt + "━━━━━━━━━━━━━━━━━━━━\n\n"
-def format_report(port, scored_today, regime, guard, state, dq_text, exit_text, board=None, gnames=None):
-    wf = state.get("backtest_summary", {})
-    msg = exit_text
-    msg += "🗽 <b>S&P 500 ADAPTIVE META-ENGINE v2</b>\n"
-    msg += f"🗓 <i>{pd.Timestamp(regime['day']).strftime('%Y-%m-%d')} NY kapanış | giriş: sonraki seans açılışı | çıkış: T+{C.HORIZON} kapanış</i>\n"
-    msg += (f"🌐 <b>Rejim:</b> {regime['label']} (kesitsel {regime.get('cross_label')}, güven %{regime['confidence'] * 100:.0f})\n"
-            f"🌍 <b>Makro:</b> {regime.get('macro_label')} | stres {regime.get('macro_stress', 0):.2f} | "
-            f"VIX {(regime.get('vix') or 0):.1f} (vade {(regime.get('vix_term') or 0):.2f}) | "
-            f"HYG-LQD 20g %{(regime.get('credit_rel20') or 0):+.1f} | SPY/200g %{(regime.get('spy_trend200') or 0):+.1f}\n")
-    msg += (f"🛡️ <b>Otonomi:</b> {guard.get('mode')} ({guard.get('reason')}) | maruziyet x{regime['exposure_mult']:.2f}\n")
-    if wf:
-        msg += (f"📊 <b>OOS doğrulama:</b> N={wf.get('n', 0)} | WR %{wf.get('win_rate', 0):.1f} (LCB %{wf.get('wilson_lcb', 0):.1f}) | "
-                f"net ort %{wf.get('avg_return', 0):+.2f} | PF {wf.get('profit_factor', 0):.2f} | t={wf.get('cohort_t', 0):.1f}\n")
-    msg += f"🔧 <i>Veri: {dq_text}</i>\n━━━━━━━━━━━━━━━━━━━━\n\n"
-    msg += format_board(board)
-
-    picks = port[port["weight_pct"] > 0] if port is not None and not port.empty else pd.DataFrame()
-    if picks.empty:
-        eff = float(scored_today["effective_min_score"].median()) if not scored_today.empty else 0
-        watch = scored_today[scored_today["watch_score"] >= eff - 5].sort_values("watch_score", ascending=False).head(5)
-        if not watch.empty:
-            msg += "🔎 <b>İZLEME (eşik altı):</b>\n" + "".join(
-                f"• #{r.ticker} | skor {r.watch_score:.1f} / eşik {r.effective_min_score:.1f}\n" for r in watch.itertuples())
-        return msg + "\n🛡️ <i>Bugün giriş kriterlerini geçen aday yok.</i>"
-
-    for _, r in picks.iterrows():
-        msg += f"🚀 <b>#{r['ticker']}</b> ── <b>{r['shock_score']:.1f}</b> / eşik {r['effective_min_score']:.1f} ({r['stars']})\n"
-        msg += (f"• Günlük %{r['change_%']:+.2f} | piyasa üstü %{r.get('excess_return', 0):+.2f} | "
-                f"RVOL {r.get('rvol', 1):.2f}x | zVol {r.get('z_vol', 0):+.1f}σ\n")
-        msg += (f"• Olay {r['event_score']:.0f} | Birikim {r['flow_score']:.0f} (CMF {r.get('cmf20', 0):+.2f}) | "
-                f"Dayanıklılık {r['resilience_score']:.0f} | Gap-risk {r['overnight_risk']:.0f}\n")
-        msg += f"• ${r['close']:.2f} | {r.get('sector') or '-'} | Giriş: <i>{r['entry_status']}</i> | Felaket stop ≈ ${r['stop_price']:.2f}\n"
-        g = r.get("grp")
-        if g == g and g is not None and gnames:
-            msg += (f"• 🧭 Grup: <i>{gnames.get(int(g), '-')}</i> | Sektör akışı {r.get('sector_score', 50):.0f} "
-                    f"(grup CMF {r.get('sec_cmf', 0) if r.get('sec_cmf') == r.get('sec_cmf') else 0:+.2f})\n")
-        msg += f"💰 <b>Ağırlık: {r['allocation']}</b>\n\n"
-    skipped = port[(port["weight_pct"] <= 0) & (port["skip_reason"] != "")]
-    if not skipped.empty:
-        msg += "↪️ <i>Elenen: " + ", ".join(f"#{a} ({b})" for a, b in zip(skipped["ticker"], skipped["skip_reason"])) + "</i>\n"
-    msg += f"━━━━━━━━━━━━━━━━━━━━\n🎯 <i>{len(picks)} pozisyon | brüt %{picks['weight_pct'].sum():.1f}</i>"
-    return msg
+        status = "STOP" if low <= stop else ("EXIT" if held >= C.HORIZON else "HOLD")
+        rows.append({"ticker": t, "status": status, "held": held, "pnl": (cur / entry - 1.0) * 100.0,
+                     "stop": stop, "weight": r.get("weight_pct")})
+    return rows
 
 
 # ------------------------------------------------------------------
@@ -390,7 +302,19 @@ def main():
     scored["stars"] = [stars_for(r) for _, r in scored.iterrows()]
     scored = scored.sort_values(["shock_score", "risk_adjusted_score"], ascending=False).reset_index(drop=True)
 
-    cands = scored[scored["shock_score"] >= scored["effective_min_score"]].head(C.TOP_K_PER_DAY).copy()
+    # Kazanma olasılığı filtresi (meta-etiket): yalnızca denetim OOS kanıtla açtıysa kullanılır
+    ml = state.get("meta_label") or {}
+    model = ml.get("model") if ml.get("enabled") else None
+    if model:
+        scored["p_win"] = np.nan
+        elig_idx = scored.index[scored["eligible"]]
+        if len(elig_idx):
+            scored.loc[elig_idx, "p_win"] = meta_predict(model, scored.loc[elig_idx]).values
+        cands = select_with_meta(scored, model).copy()
+        if guard.get("block_new_entries"):
+            cands = cands.iloc[0:0]
+    else:
+        cands = scored[scored["shock_score"] >= scored["effective_min_score"]].head(C.TOP_K_PER_DAY).copy()
     for idx, r in cands.iterrows():
         has, when = check_earnings_risk(r["ticker"])
         if has:
@@ -423,9 +347,10 @@ def main():
     ledger = update_ledger_from_panel(ledger, panel)
     ledger = record_ledger_entries(ledger, port, day)
     ledger.to_csv(C.LEDGER_FILE, index=False)
-    exit_text = exit_engine_text(ledger, panel)
+    positions = exit_rows(ledger, panel)
 
     # app.py için günlük kesit geçmişi (120 gün)
+    scored["grp_name"] = scored["grp"].map(lambda g: gnames.get(int(g)) if g == g and g is not None else None)
     hist = gecmis_veriyi_yukle()
     snap = scored.copy()
     snap["tarih"] = pd.Timestamp(day)
@@ -442,7 +367,24 @@ def main():
     state["status"] = f"🧠 META v2 | {regime['label']} | makro {regime['macro_label']} | guard {guard.get('mode')}"
     save_ai_state(state)
 
-    send_telegram_message(format_report(port, scored, regime, guard, state, dq_text, exit_text, board, gnames))
+    picks = []
+    if not port.empty:
+        for _, r in port[port["weight_pct"] > 0].iterrows():
+            g = r.get("grp")
+            picks.append({"ticker": r["ticker"], "close": r["close"], "change": r.get("change_%"),
+                          "score": r["shock_score"], "thr": r["effective_min_score"], "p_win": r.get("p_win"),
+                          "weight": r["weight_pct"], "stop": r["stop_price"], "sec_cmf": r.get("sec_cmf"),
+                          "group": gnames.get(int(g)) if g == g and g is not None else None})
+    watch = []
+    if not picks:
+        w = scored[scored["eligible"]].sort_values("watch_score", ascending=False).head(3)
+        watch = [{"ticker": r.ticker, "score": r.watch_score, "thr": r.effective_min_score,
+                  "p_win": getattr(r, "p_win", None) if model else None, "q": (model or {}).get("q")}
+                 for r in w.itertuples() if r.watch_score >= r.effective_min_score - 8]
+    report.send(report.scan_message({
+        "day": day, "regime": regime, "guard": guard, "exposure": exposure, "picks": picks, "watch": watch,
+        "positions": positions, "board": board, "scorecard": state.get("backtest_summary"),
+        "meta_on": bool(model), "dq": dq}))
     print("Tarama tamamlandı.")
 
 

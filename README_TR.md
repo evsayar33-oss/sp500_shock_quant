@@ -40,7 +40,7 @@ Ek olarak:
 
 ## Dosyalar
 
-`config.py` (tüm sabitler) · `sector_flow.py` (grup akış katmanı) · `price_history.py` (panel, bileşenler, makro, bilanço) · `features.py` · `regime.py` · `sp_engine.py` · `portfolio.py` · `sp_learner.py` · `win_rate_optimizer.py` · `sp_fetcher.py` · `main.py` · `sp_auditor.py` · `app.py`. `autonomy_guard.py` değişmedi.
+`config.py` (tüm sabitler) · `sector_flow.py` (grup akış katmanı) · `meta_label.py` (olasılık filtresi) · `report.py` (Telegram) · `price_history.py` (panel, bileşenler, makro, bilanço) · `features.py` · `regime.py` · `sp_engine.py` · `portfolio.py` · `sp_learner.py` · `win_rate_optimizer.py` · `sp_fetcher.py` · `main.py` · `sp_auditor.py` · `app.py`. `autonomy_guard.py` değişmedi.
 
 ## Bilinen sınırlar
 
@@ -74,3 +74,26 @@ Ek olarak:
 **Raporlar:** Telegram'da günlük "Sektör / Grup Akış Panosu" yer alır: birikim, görece güçlü ve dağıtım grupları, 🕵️ sessiz birikim işareti. Her önerinin grubu ve sektör akış skoru da gösterilir. Panelde yeni "🧭 Sektör Akışı" sekmesi var.
 
 **Not:** Sektör ailesinin başlangıç şablon ağırlığı (%15) ve iç formülü, iki projenin tüm verisine bakılarak seçildi. Bu hafif bir veri gözetleme (data snooping) riski taşır. Bu yüzden ağırlığın gerçek değerini, embargo'lu walk-forward ve terfi kuralları üzerinden sistemin kendisi belirler.
+
+
+## v2.2: Win-rate düzeltmeleri, olasılık filtresi, yeni panel ve Telegram
+
+**Bulunan ve düzeltilen hatalar**
+1. **Eşik ofseti çift sayılıyordu (win-rate optimizer).** Optimizer havuzu, mevcut ofset zaten gömülü halde normalize ediliyordu; ofset her çalıştırmada kendi üzerine ekleniyordu. Havuz artık ofsetten arındırılmış eşiğe göre normalize ediliyor.
+2. **Optimizer günlük işlem sınırını uygulamıyordu.** Eşik testleri artık canlıdaki gibi günlük en fazla `TOP_K_PER_DAY` işlemle yapılıyor.
+3. **Güven istatistiği (t) rastgele sapıyordu.** "Her 5. işlem günü" alt örneklemesi başlangıç gününe bağlıydı (net +%0.44 iken t = −0.27 çıkabiliyordu). Artık tüm günlük kohortlar kullanılıyor ve örtüşme düzeltmesi yapılıyor.
+4. **Şansa bağlı terfi mümkündü.** BIST v2.1 t≈0 ile terfi etmişti. Artık aday modelin OOS t değeri en az `PROMOTION_MIN_T` (1.0) olmalı.
+5. **Hisse tespitinde sabit "yalnızca yükselen günde al" kapısı vardı.** Gerçek BIST verisinde bu kapı kenarı bozuyordu: zayıf günde birikim yapan hisselerde net +%0.51 ölçüldü. Kapı (`UP` / `ANY`) artık her walk-forward diliminde öğreniliyor.
+
+**Win rate'i yükselten ekleme: kazanma olasılığı filtresi (`meta_label.py`)**
+- Kurumsal meta-etiketleme yöntemi: L2-cezalı lojistik model, her aday için P(net kazanç) tahmin eder. Yalnızca eğitimde seçilen p* eşiğini geçen adaylar alınır ve olasılığa göre sıralanır.
+- Model **tüm uygun hisselerle** eğitilir. Gerçek veride dar havuz WR %45.8 verirken geniş havuz WR %56.8 verdi.
+- **Kendiliğinden açılır/kapanır:** OOS'ta win-rate LCB'yi yükseltiyor ve net getiriyi bozmuyorsa açılır.
+  - S&P (OOS): WR %50.6 → **%56.8**, net +%0.34 → **+%1.41**, PF 1.18 → **1.78** → **AÇIK**
+  - BIST (OOS): net getiriyi düşürüyor → **KAPALI**
+
+**Çıkış stratejisi karşılaştırması (yalnızca rapor):** Kâr-al (TP) hedefleri win rate'i %59–60'a çıkarıyor, ama işlem başı neti düşürüyor. Bu yüzden canlı kural T+5 zaman çıkışı olarak kalıyor. Karşılaştırma her denetimde raporlanır.
+
+**Panel (`app.py`):** Sade kart tasarımı ve 🔍 **hisse arama çubuğu**. Seçilen hisse için durum (SİNYAL / İZLEMEDE / UYGUN DEĞİL), skor ve eşik, kazanma olasılığı, grup, 6 bileşenin dökümü, 6 aylık fiyat grafiği ve **"neden sinyal değil"** açıklaması gösterilir. Sekmeler: Sinyaller · Para akışı · Pozisyonlar · Performans · Defter.
+
+**Telegram (`report.py`):** Her iki mesaj yeniden tasarlandı. Günlük sinyal mesajı önce kararı verir; her sinyal üç satırdır (fiyat · skor ve olasılık · ağırlık ve stop · grup). Denetim mesajında aktif ve aday model hizalı bir tabloda karşılaştırılır.

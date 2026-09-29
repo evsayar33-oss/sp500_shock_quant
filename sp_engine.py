@@ -49,6 +49,11 @@ FAMILY_COLS = {"event": "event_score", "flow": "flow_score", "activity": "activi
                "liquidity": "liquidity_score", "resilience": "resilience_score", "sector": "sector_score"}
 
 
+def profile_gate(profile):
+    """'UP' = yalnızca yükselen günde aday; 'ANY' = yön kapısı yok (akış/likidite/risk kapıları sürer)."""
+    return "ANY" if str((profile or {}).get("gate", "UP")).upper() == "ANY" else "UP"
+
+
 def profile_signs(profile):
     s = (profile or {}).get("signs") or {}
     return {k: (-1 if _num(s.get(k), 1.0) < 0 else 1) for k in DEFAULT_META_WEIGHTS}
@@ -106,6 +111,10 @@ def score_frame(df: pd.DataFrame, profiles: dict | None = None, threshold_offset
         out["macro_threshold_add"] = 0.0
 
     meta = pd.Series(0.0, index=out.index)
+    if "eligible_any" not in out.columns:
+        out["eligible_any"] = out["eligible"]
+    # UP kapısı her zaman eligible_any & current_positive'tan türetilir (tekrar skorlamada kayma olmaz)
+    elig = (out["eligible_any"].fillna(False).astype(bool) & out["current_positive"].fillna(False).astype(bool)).copy()
     min_score = pd.Series(75.0, index=out.index)
     wcols = {k: pd.Series(0.0, index=out.index) for k in DEFAULT_META_WEIGHTS}
     if "sector_score" not in out.columns:
@@ -114,6 +123,8 @@ def score_frame(df: pd.DataFrame, profiles: dict | None = None, threshold_offset
         prof = profiles.get(reg) or default_profile(reg)
         w = runtime_weights(prof, reg, conf)
         sg = profile_signs(prof)
+        if profile_gate(prof) == "ANY":
+            elig.loc[idx] = out.loc[idx, "eligible_any"].fillna(False).astype(bool)
         part = out.loc[idx]
         meta.loc[idx] = sum((part[FAMILY_COLS[k]].fillna(50.0) if sg[k] > 0 else 100.0 - part[FAMILY_COLS[k]].fillna(50.0)) * w[k]
                             for k in w)
@@ -134,7 +145,8 @@ def score_frame(df: pd.DataFrame, profiles: dict | None = None, threshold_offset
     out["risk_adjusted_score"] = score
     out["watch_score"] = score
     out["confidence_score"] = score
-    out["shock_score"] = np.where(out["eligible"].fillna(False), score, 0.0)
+    out["eligible"] = elig
+    out["shock_score"] = np.where(elig, score, 0.0)
     out["effective_min_score"] = eff.clip(60.0, 101.0).round(1)
     out["meta_selection"] = np.where(out["shock_score"] >= out["effective_min_score"], "SELECTED",
                                      np.where(out["watch_score"] >= out["effective_min_score"] - 5.0, "WATCH", "REJECTED"))

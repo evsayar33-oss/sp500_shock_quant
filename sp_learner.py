@@ -20,6 +20,7 @@ import numpy as np
 import pandas as pd
 
 import config as C
+from meta_label import fit_meta, predict as meta_predict, select_with_meta  # noqa: F401
 from sp_engine import (DEFAULT_META_WEIGHTS, FAMILY_COLS, REGIME_META_TEMPLATES, REGIME_MIN_SCORES,
                           default_profile, default_profiles, normalize_weights, score_frame)
 
@@ -126,17 +127,18 @@ def trade_metrics(trades: pd.DataFrame, ret_col="net_ret") -> dict:
     n = int(len(ret))
     gains, losses = float(ret[ret > 0].sum()), float(abs(ret[ret < 0].sum()))
     pf = gains / losses if losses > 0 else (5.0 if gains > 0 else 0.0)
-    # Örtüşmeyen kohort t-istatistiği (her HORIZON günde bir giriş kohortu)
+    # Günlük eşit ağırlıklı kohort getirileri; HORIZON gün örtüşmesi için etkin örneklem n/HORIZON.
+    # (v2.1'deki "her 5. işlem günü" alt örneklemesi başlangıç gününe bağlıydı ve t'yi rastgele saptırıyordu.)
     daily = t.groupby("tarih")[ret_col].mean().sort_index()
-    cohorts = daily.iloc[::C.HORIZON]
+    cohorts = daily
     cohort_t = 0.0
-    if len(cohorts) >= 5 and cohorts.std(ddof=1) > 0:
-        cohort_t = float(cohorts.mean() / cohorts.std(ddof=1) * math.sqrt(len(cohorts)))
+    if len(daily) >= 10 and daily.std(ddof=1) > 0:
+        cohort_t = float(daily.mean() / daily.std(ddof=1) * math.sqrt(len(daily) / C.HORIZON))
     return {"n": n, "wins": wins, "win_rate": round(wins / n * 100.0, 2),
             "wilson_lcb": round(wilson_lower_bound(wins, n) * 100.0, 2), "profit_factor": round(pf, 3),
             "avg_return": round(float(ret.mean()), 3), "median": round(float(ret.median()), 3),
             "p10": round(float(ret.quantile(0.10)), 3), "cohort_t": round(cohort_t, 2),
-            "n_cohorts": int(len(cohorts)), "days": int(daily.shape[0])}
+            "n_cohorts": int(len(cohorts) // C.HORIZON), "days": int(daily.shape[0])}
 
 
 def select_trades(scored: pd.DataFrame, top_k=C.TOP_K_PER_DAY, threshold=None) -> pd.DataFrame:
@@ -235,14 +237,38 @@ def _pick_threshold(scored_regime: pd.DataFrame, floor: float) -> tuple[float, d
     return (best[1], best[2]) if best else (None, None)
 
 
+GATE_MODES = ("UP", "ANY")
+
+
+def _objective(m: dict) -> float:
+    """Eğitim hedefi: win-rate güven alt sınırı + net getiri (win-rate'i maliyetsiz şişirmeyi engeller)."""
+    if m["n"] < C.MIN_TRADES_FOR_THRESHOLD:
+        return -1e9
+    return m["wilson_lcb"] + 5.0 * m["avg_return"]
+
+
 def learn_profiles(train: pd.DataFrame) -> dict:
-    """Her rejim için ağırlık + eşik öğrenir (yalnızca eğitim verisi)."""
+    """Her rejim için ağırlık + eşik + işaret öğrenir; yön kapısını (UP/ANY) eğitimde seçer."""
+    best = None
+    for gate in GATE_MODES:
+        profs = _learn_profiles_gate(train, gate)
+        m = trade_metrics(select_trades(score_frame(train[train["net_ret"].notna()], profs)))
+        obj = _objective(m)
+        if best is None or obj > best[0]:
+            best = (obj, profs, m)
+    profs = best[1]
+    for p in profs.values():
+        p["gate_train_metrics"] = best[2]
+    return profs
+
+
+def _learn_profiles_gate(train: pd.DataFrame, gate: str) -> dict:
     train = train[train["net_ret"].notna()]
     signs, sign_stats = learn_signs(train)
     profiles = {}
     for reg in C.REGIMES:
         w, edges, n_days = _learn_weights(train, reg, signs)
-        profiles[reg] = {"weights": w, "signs": dict(signs), "min_score": REGIME_MIN_SCORES[reg], "regime": reg,
+        profiles[reg] = {"weights": w, "signs": dict(signs), "gate": gate, "min_score": REGIME_MIN_SCORES[reg], "regime": reg,
                          "version": META_VERSION, "learned_edges": edges, "regime_days": n_days,
                          "sign_stats": sign_stats}
     scored = score_frame(train, profiles)
@@ -275,7 +301,7 @@ def walk_forward(research: pd.DataFrame, active: dict, offset: float = 0.0) -> d
     if len(dates) < C.WF_MIN_TRAIN_DAYS + C.WF_EMBARGO_DAYS + 20:
         return {"ok": False, "reason": f"WARMUP ({len(dates)} etiketli gün)", "days": int(len(dates))}
 
-    folds, cand_tr, act_tr, tmpl_tr, pool = [], [], [], [], []
+    folds, cand_tr, act_tr, tmpl_tr, pool, meta_tr = [], [], [], [], [], []
     start = C.WF_MIN_TRAIN_DAYS + C.WF_EMBARGO_DAYS
     tmpl = default_profiles()
     while start < len(dates):
@@ -288,22 +314,29 @@ def walk_forward(research: pd.DataFrame, active: dict, offset: float = 0.0) -> d
         sc_a = score_frame(test, active, threshold_offset=offset)
         sc_t = score_frame(test, tmpl, threshold_offset=offset)
         tc, ta, tt = select_trades(sc_c), select_trades(sc_a), select_trades(sc_t)
+        # Meta-etiket: CANLIDA KULLANILAN (aktif) skorlama üzerinde eğitimde kurulur, testte uygulanır.
+        # (Aday profil aynı eğitim diliminde öğrenildiği için onun skorları örneklem içidir ve meta modeli yanıltır.)
+        model = fit_meta(score_frame(train, active, threshold_offset=offset), trade_metrics)
+        tm = select_with_meta(sc_a, model) if model else ta
+        meta_tr.append(tm.assign(fold=len(folds)))
         cand_tr.append(tc.assign(fold=len(folds)))
         act_tr.append(ta.assign(fold=len(folds)))
         tmpl_tr.append(tt.assign(fold=len(folds)))
-        # win-rate optimizer için eşik-altı dahil aday havuzu (marj normalize)
+        # win-rate optimizer için eşik-altı dahil aday havuzu. Marj, MEVCUT OFSET HARİÇ eşiğe göre
+        # normalize edilir (v2.1 hatası: ofset havuza da gömülüyordu, her çalıştırmada üst üste biniyordu).
         p = sc_c[sc_c["eligible"] & (sc_c["shock_score"] >= sc_c["effective_min_score"] - 10.0)].copy()
         p = p.sort_values(["tarih", "shock_score"], ascending=[True, False]).groupby("tarih").head(15)
-        p["signal_score"] = p["shock_score"] - p["effective_min_score"] + 75.0
+        p["signal_score"] = p["shock_score"] - (p["effective_min_score"] - offset) + 75.0
         pool.append(p[["tarih", "ticker", "signal_score", "net_ret"]])
         folds.append({"train_end": str(pd.Timestamp(train_dates[-1]).date()),
                       "test_start": str(pd.Timestamp(test_dates[0]).date()),
                       "test_end": str(pd.Timestamp(test_dates[-1]).date()),
-                      "candidate": trade_metrics(tc), "active": trade_metrics(ta)})
+                      "candidate": trade_metrics(tc), "active": trade_metrics(ta), "meta": trade_metrics(tm),
+                      "meta_on": bool(model), "gate": next(iter(cand.values())).get("gate", "UP")})
         start += C.WF_TEST_DAYS
 
     cat = lambda xs: pd.concat(xs, ignore_index=True) if xs else pd.DataFrame()
-    cand_all, act_all, tmpl_all = cat(cand_tr), cat(act_tr), cat(tmpl_tr)
+    cand_all, act_all, tmpl_all, meta_all = cat(cand_tr), cat(act_tr), cat(tmpl_tr), cat(meta_tr)
     oos_idx = research["tarih"].isin(cand_all["tarih"].unique()) if not cand_all.empty else research["tarih"].isin([])
     ic_report = {}
     oos = research[oos_idx & research["current_positive"] & ~research["is_illiquid"]]
@@ -311,8 +344,23 @@ def walk_forward(research: pd.DataFrame, active: dict, offset: float = 0.0) -> d
         ic, t, n = daily_rank_ic(oos, col)
         ic_report[fam] = {"ic": round(ic, 4), "t": round(t, 2), "days": n}
     return {"ok": True, "folds": folds, "candidate": trade_metrics(cand_all), "active": trade_metrics(act_all),
-            "template": trade_metrics(tmpl_all), "ic": ic_report, "candidate_trades": cand_all,
+            "template": trade_metrics(tmpl_all), "meta": trade_metrics(meta_all), "ic": ic_report,
+            "candidate_trades": cand_all, "meta_trades": meta_all, "active_trades": act_all,
             "pool": cat(pool), "days": int(len(dates))}
+
+
+PROMOTION_MIN_T = getattr(C, "PROMOTION_MIN_T", 1.0)
+META_MIN_T = getattr(C, "META_MIN_T", 0.5)   # meta filtre işlemleri az güne yoğunlaşır; win-rate kazancı ayrıca LCB ile test edilir
+
+
+def meta_decision(base_m: dict, meta_m: dict) -> tuple[bool, str]:
+    """Meta-etiket yalnızca OOS'ta win-rate LCB'yi yükseltir ve net getiriyi bozmazsa açılır."""
+    if meta_m["n"] < C.PROMOTION_MIN_OOS_TRADES:
+        return False, f"meta OOS örneklem yetersiz (n={meta_m['n']})"
+    lcb = meta_m["wilson_lcb"] - base_m["wilson_lcb"]
+    avg = meta_m["avg_return"] - base_m["avg_return"]
+    ok = lcb >= 0.5 and avg >= -0.05 and meta_m["profit_factor"] >= base_m["profit_factor"] and meta_m["cohort_t"] >= META_MIN_T
+    return bool(ok), f"meta LCB {lcb:+.2f}pp | net {avg:+.2f} | PF {meta_m['profit_factor']:.2f} vs {base_m['profit_factor']:.2f} | t={meta_m['cohort_t']:.2f}"
 
 
 def promotion_decision(active_m: dict, cand_m: dict) -> tuple[bool, str]:
@@ -327,6 +375,8 @@ def promotion_decision(active_m: dict, cand_m: dict) -> tuple[bool, str]:
     improve = (lcb_lift >= C.PROMOTION_MIN_LCB_LIFT and avg_lift >= -0.05) or \
               (avg_lift >= C.PROMOTION_MIN_AVG_LIFT and lcb_lift >= -1.0)
     note = f"LCB fark {lcb_lift:+.2f}pp | Net ort fark {avg_lift:+.2f} | t={cand_m['cohort_t']:.2f}"
+    if cand_m["cohort_t"] < PROMOTION_MIN_T:
+        return False, f"İstatistiksel güven yetersiz (t={cand_m['cohort_t']:.2f} < {PROMOTION_MIN_T}) | " + note
     if active_m["n"] < C.PROMOTION_MIN_OOS_TRADES:
         return True, "Aktif profil OOS'ta yetersiz işlem üretti; aday tabanı geçti | " + note
     return bool(improve), note
@@ -464,3 +514,44 @@ def build_runtime_meta_profile(regime_snapshot, state=None):
     prof = active_profiles(state).get(regime, default_profile(regime))
     return {"version": META_VERSION, "regime": regime, "weights": prof.get("weights"),
             "min_score": prof.get("min_score"), "source": "REGIME_PROFILE_v2"}
+
+
+# ------------------------------------------------------------------
+# Çıkış stratejisi karşılaştırması (yalnızca rapor — canlı kural T+HORIZON zaman çıkışıdır)
+# ------------------------------------------------------------------
+def exit_variants(trades: pd.DataFrame, panel: pd.DataFrame, ks=(1.0, 1.5, 2.0)) -> dict:
+    """OOS işlemler için kâr-al (k×ATR limit satış) + T+H zaman çıkışı alternatiflerini ölçer.
+    Gün içi sıra: açılış hedefin üzerindeyse açılıştan, değilse gün içi yüksek hedefe değerse hedeften."""
+    out = {f"T+{C.HORIZON} zaman": trade_metrics(trades)}
+    if trades is None or trades.empty or panel is None or panel.empty:
+        return out
+    cal = pd.DatetimeIndex(sorted(pd.to_datetime(panel["tarih"].unique())))
+    px = panel.set_index(["tarih", "ticker"])[["open", "high", "close"]]
+    base = trades.dropna(subset=["net_ret"])[["tarih", "ticker", "close", "atr", "cost_rt", "net_ret"]].copy()
+    for k in ks:
+        rets = []
+        for r in base.itertuples(index=False):
+            pos = int(cal.searchsorted(pd.Timestamp(r.tarih), side="right"))
+            if pos + C.HORIZON - 1 >= len(cal) or (cal[pos], r.ticker) not in px.index:
+                rets.append(np.nan)
+                continue
+            entry = float(px.loc[(cal[pos], r.ticker), "open"])
+            tp = entry * (1.0 + k * _safe_float(r.atr) / max(_safe_float(r.close, 1.0), 1e-9))
+            fill = None
+            for j in range(C.HORIZON):
+                key = (cal[pos + j], r.ticker)
+                if key not in px.index:
+                    break
+                o_, h_ = px.loc[key, "open"], px.loc[key, "high"]
+                if j > 0 and o_ >= tp:
+                    fill = o_
+                    break
+                if h_ >= tp:
+                    fill = tp
+                    break
+            if fill is None:
+                key = (cal[pos + C.HORIZON - 1], r.ticker)
+                fill = px.loc[key, "close"] if key in px.index else np.nan
+            rets.append((fill / entry - 1.0) * 100.0 - r.cost_rt)
+        out[f"TP {k:g}×ATR"] = trade_metrics(base.assign(net_ret=rets))
+    return out

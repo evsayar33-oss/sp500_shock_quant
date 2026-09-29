@@ -143,10 +143,13 @@ def build_features(panel: pd.DataFrame, with_labels: bool = True, earnings: pd.D
     df["current_positive"] = df["change_%"] > 0.0
     df["directional_flow_ok"] = df["flow_score"] >= C.MIN_FLOW_SCORE
     df["earnings_in_window"] = mark_earnings_window(df, earnings)
-    df["eligible"] = (df["current_positive"] & df["directional_flow_ok"] & ~df["is_downtrend_knife"]
-                      & ~df["is_illiquid"] & (df["overnight_risk"] < C.MAX_OVERNIGHT_RISK))
+    # eligible_any: yön kapısı OLMADAN uygunluk; eligible: + "yükselen gün" kapısı.
+    # Hangisinin kullanılacağını öğrenici profil["gate"] ile seçer.
+    df["eligible_any"] = (df["directional_flow_ok"] & ~df["is_downtrend_knife"]
+                          & ~df["is_illiquid"] & (df["overnight_risk"] < C.MAX_OVERNIGHT_RISK))
     if C.EARNINGS_BLACKOUT:
-        df["eligible"] &= ~df["earnings_in_window"]
+        df["eligible_any"] &= ~df["earnings_in_window"]
+    df["eligible"] = df["eligible_any"] & df["current_positive"]
     df = add_sector_features(df, c)          # sektör/grup akış katmanı (point-in-time kümeler)
     num = df.select_dtypes(include=[np.number]).columns
     df[num] = df[num].replace([np.inf, -np.inf], np.nan)

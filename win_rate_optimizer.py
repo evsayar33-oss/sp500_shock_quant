@@ -25,6 +25,12 @@ import math
 import numpy as np
 import pandas as pd
 
+try:
+    import config as _C
+    _TOP_K = int(getattr(_C, "TOP_K_PER_DAY", 10))
+except Exception:
+    _TOP_K = 10
+
 
 PROJECT = 'sp500_shock'
 SCORE_COL = 'signal_score'
@@ -101,6 +107,9 @@ def _metrics(df: pd.DataFrame, threshold: float) -> Dict:
     if df.empty:
         return {"n": 0, "wins": 0, "win_rate": 0.0, "wilson_lcb": 0.0, "pf": None, "avg_return": None}
     sel = df[pd.to_numeric(df[signal_score], errors="coerce") >= float(threshold)].copy()
+    # Canlı seçimle tutarlılık: her gün en fazla TOP_K_PER_DAY işlem (v2.1'de sınırsızdı)
+    if tarih in sel.columns and not sel.empty:
+        sel = sel.sort_values([tarih, signal_score], ascending=[True, False]).groupby(tarih, sort=False).head(_TOP_K)
     resolved = _resolved_mask(sel)
     sel = sel[resolved].copy()
     n = int(len(sel))
