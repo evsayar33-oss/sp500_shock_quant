@@ -1,0 +1,98 @@
+[
+ {
+  "grp":6.0,
+  "n":26,
+  "sec_cmf":0.0437365763,
+  "sec_acc":0.1923076923,
+  "sec_ret5":4.8685302116,
+  "sec_ret20":8.8406449352,
+  "score":85.9274193548,
+  "name":"Health Technology · LLY, JNJ, TMO",
+  "stealth":0.0,
+  "side":"BİRİKİM"
+ },
+ {
+  "grp":3.0,
+  "n":98,
+  "sec_cmf":0.0280415811,
+  "sec_acc":0.0510204082,
+  "sec_ret5":1.9263755738,
+  "sec_ret20":8.5610674071,
+  "score":74.7076612903,
+  "name":"Electronic Technology · MU, NVDA, SNDK",
+  "stealth":0.08,
+  "side":"BİRİKİM"
+ },
+ {
+  "grp":15.0,
+  "n":30,
+  "sec_cmf":-0.1308529577,
+  "sec_acc":0.0333333333,
+  "sec_ret5":-0.6988642834,
+  "sec_ret20":0.0804663215,
+  "score":59.4052419355,
+  "name":"Energy Minerals · XOM, CVX, VLO",
+  "stealth":0.31,
+  "side":"GÖRECE GÜÇLÜ"
+ },
+ {
+  "grp":9.0,
+  "n":21,
+  "sec_cmf":-0.0766607292,
+  "sec_acc":0.0,
+  "sec_ret5":-0.0060456721,
+  "sec_ret20":-0.1080115499,
+  "score":56.9052419355,
+  "name":"Health Technology · BSX, MDT, ISRG",
+  "stealth":0.31,
+  "side":"GÖRECE GÜÇLÜ"
+ },
+ {
+  "grp":2.0,
+  "n":35,
+  "sec_cmf":-0.1137061429,
+  "sec_acc":0.0571428571,
+  "sec_ret5":-2.0972182618,
+  "sec_ret20":-1.9379889135,
+  "score":56.7741935484,
+  "name":"Finance · JPM, BAC, GS",
+  "stealth":0.69,
+  "side":"GÖRECE GÜÇLÜ"
+ },
+ {
+  "grp":16.0,
+  "n":118,
+  "sec_cmf":-0.2104737256,
+  "sec_acc":0.0084745763,
+  "sec_ret5":-0.364503397,
+  "sec_ret20":-1.0318613599,
+  "score":30.8669354839,
+  "name":"WMT, BRK-B, COST",
+  "stealth":-0.31,
+  "side":"DAĞITIM"
+ },
+ {
+  "grp":11.0,
+  "n":61,
+  "sec_cmf":-0.1802464196,
+  "sec_acc":0.0,
+  "sec_ret5":-1.0560686257,
+  "sec_ret20":-4.9350670618,
+  "score":25.0907258065,
+  "name":"CRM, NFLX, NOW",
+  "stealth":-0.08,
+  "side":"DAĞITIM"
+ },
+ {
+  "grp":10.0,
+  "n":5,
+  "sec_cmf":-0.2405176295,
+  "sec_acc":0.0,
+  "sec_ret5":-1.972851193,
+  "sec_ret20":-8.178420388,
+  "score":11.7943548387,
+  "name":"Industrials · LVS, WYNN, FTV",
+  "stealth":-0.08,
+  "side":"DAĞITIM"
+ }
+]
