@@ -22,8 +22,9 @@ import pandas as pd
 
 import config as C
 from regime import classify_market_regime, combine_regime, macro_snapshot
+from sector_flow import add_sector_features
 
-FAMILIES = ("event", "flow", "activity", "liquidity", "resilience")
+FAMILIES = ("event", "flow", "activity", "liquidity", "resilience", "sector")
 
 
 def _wide(panel, col):
@@ -146,6 +147,7 @@ def build_features(panel: pd.DataFrame, with_labels: bool = True, earnings: pd.D
                       & ~df["is_illiquid"] & (df["overnight_risk"] < C.MAX_OVERNIGHT_RISK))
     if C.EARNINGS_BLACKOUT:
         df["eligible"] &= ~df["earnings_in_window"]
+    df = add_sector_features(df, c)          # sektör/grup akış katmanı (point-in-time kümeler)
     num = df.select_dtypes(include=[np.number]).columns
     df[num] = df[num].replace([np.inf, -np.inf], np.nan)
     return df.reset_index(drop=True)

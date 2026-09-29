@@ -176,7 +176,21 @@ def daily_rank_ic(df: pd.DataFrame, col: str, target="net_ret") -> tuple[float, 
     return float(ic.mean()), t, int(len(ic))
 
 
-def _learn_weights(train: pd.DataFrame, regime: str) -> tuple[dict, dict, int]:
+SIGN_FLIP_T = -2.0      # bir ailenin işareti yalnızca eğitimde t <= -2 ise çevrilir (muhafazakâr)
+
+
+def learn_signs(train: pd.DataFrame) -> tuple[dict, dict]:
+    """Aile işaretleri: tüm eğitim havuzunda (işlem yapılan popülasyon) günlük rank-IC ve t."""
+    pool = train[train["current_positive"] & ~train["is_illiquid"] & train["net_ret"].notna()]
+    signs, stats = {}, {}
+    for fam, col in FAMILY_COLS.items():
+        ic, t, n = daily_rank_ic(pool, col)
+        signs[fam] = -1 if t <= SIGN_FLIP_T else 1
+        stats[fam] = {"ic": round(ic, 4), "t": round(t, 2), "days": n}
+    return signs, stats
+
+
+def _learn_weights(train: pd.DataFrame, regime: str, signs: dict | None = None) -> tuple[dict, dict, int]:
     template = REGIME_META_TEMPLATES.get(regime, DEFAULT_META_WEIGHTS)
     pool = train[(train["regime_label"] == regime)]
     n_days = pool["tarih"].nunique()
@@ -186,10 +200,12 @@ def _learn_weights(train: pd.DataFrame, regime: str) -> tuple[dict, dict, int]:
     else:
         n_days_used = n_days
     pool = pool[pool["current_positive"] & ~pool["is_illiquid"]]  # işlem yapılan popülasyonda IC
+    signs = signs or {k: 1 for k in FAMILY_COLS}
     edges = {}
     for fam, col in FAMILY_COLS.items():
         ic, t, _ = daily_rank_ic(pool, col)
-        # Yalnızca istatistiksel olarak pozitif kenar ağırlık kazanır; aksi halde küçük taban
+        ic, t = ic * signs.get(fam, 1), t * signs.get(fam, 1)   # işarete hizalanmış kenar
+        # Yalnızca (hizalanmış) pozitif kenar ağırlık kazanır; aksi halde küçük taban
         edges[fam] = max(ic, 0.0) * (1.0 if t >= 1.0 else 0.5) + 0.005
     total = sum(edges.values())
     learned = {k: v / total for k, v in edges.items()}
@@ -222,11 +238,13 @@ def _pick_threshold(scored_regime: pd.DataFrame, floor: float) -> tuple[float, d
 def learn_profiles(train: pd.DataFrame) -> dict:
     """Her rejim için ağırlık + eşik öğrenir (yalnızca eğitim verisi)."""
     train = train[train["net_ret"].notna()]
+    signs, sign_stats = learn_signs(train)
     profiles = {}
     for reg in C.REGIMES:
-        w, edges, n_days = _learn_weights(train, reg)
-        profiles[reg] = {"weights": w, "min_score": REGIME_MIN_SCORES[reg], "regime": reg, "version": META_VERSION,
-                         "learned_edges": edges, "regime_days": n_days}
+        w, edges, n_days = _learn_weights(train, reg, signs)
+        profiles[reg] = {"weights": w, "signs": dict(signs), "min_score": REGIME_MIN_SCORES[reg], "regime": reg,
+                         "version": META_VERSION, "learned_edges": edges, "regime_days": n_days,
+                         "sign_stats": sign_stats}
     scored = score_frame(train, profiles)
     scored["_min_used"] = scored["regime_label"].map(lambda r: profiles[r]["min_score"])
     global_th, _ = _pick_threshold(scored, floor=min(REGIME_MIN_SCORES.values()) - 6)
@@ -344,6 +362,7 @@ def load_signal_history():
 
 LOG_COLS = ["tarih", "ticker", "close", "shock_score", "watch_score", "meta_score", "risk_adjusted_score",
             "effective_min_score", "z_vol", "z_range", "z_flow", "z_lambda", "cmf20", "resilience_score",
+            "grp", "sector_score", "sec_cmf", "sec_ret20",
             "excess_return", "rel_1m_pct", "rel_3m_pct", "trend_persistence", "event_score", "flow_score",
             "activity_score", "liquidity_score", "non_price_score", "overnight_risk", "liq20", "volatility",
             "current_positive", "crash_resilient", "crash_survivor", "meta_regime", "meta_regime_confidence",

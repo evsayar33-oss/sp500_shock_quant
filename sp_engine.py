@@ -9,6 +9,11 @@ Mimari
   3) score_frame : rejime koşullu aile ağırlıkları (öğrenilmiş profil ⊕ rejim şablonu)
   4) portfolio.py: volatilite hedefli boyut, korelasyon filtresi, brüt limit
 Fiyat yönü ana skoru üretmez; yalnızca uygunluk kapısıdır (change_% > 0).
+
+v2.1: 6. aile "sector" (sektör/grup akışı, sector_flow.py) + İŞARETLİ ağırlıklar.
+Öğrenici, OOS'ta istatistiksel olarak NEGATİF IC veren bir aileyi ters çevirebilir
+(profil["signs"][aile] = -1 -> skor katkısı 100 - aile_skoru). Örn. BIST'te gerçek veride
+"olay" ve "aktivite" (gürültülü hacim şokları) T+5'te geri dönüş öngörüyor (t≈-5).
 """
 from __future__ import annotations
 
@@ -22,7 +27,8 @@ from regime import classify_market_regime  # noqa: F401  (geri uyumluluk için y
 
 GECMIS_DOSYA = C.GECMIS_DOSYA
 
-DEFAULT_META_WEIGHTS = {"event": 0.20, "flow": 0.25, "activity": 0.20, "liquidity": 0.15, "resilience": 0.20}
+DEFAULT_META_WEIGHTS = {"event": 0.17, "flow": 0.21, "activity": 0.17, "liquidity": 0.13, "resilience": 0.17, "sector": 0.15}
+SECTOR_TEMPLATE_WEIGHT = 0.15
 
 REGIME_META_TEMPLATES = {
     "CRASH":     {"event": 0.14, "flow": 0.24, "activity": 0.14, "liquidity": 0.12, "resilience": 0.36},
@@ -30,13 +36,22 @@ REGIME_META_TEMPLATES = {
     "ROTATION":  {"event": 0.16, "flow": 0.28, "activity": 0.18, "liquidity": 0.15, "resilience": 0.23},
     "EXPANSION": {"event": 0.18, "flow": 0.31, "activity": 0.23, "liquidity": 0.15, "resilience": 0.13},
     "QUIET":     {"event": 0.14, "flow": 0.24, "activity": 0.22, "liquidity": 0.20, "resilience": 0.20},
-    "NORMAL":    dict(DEFAULT_META_WEIGHTS),
+    "NORMAL":    {"event": 0.20, "flow": 0.25, "activity": 0.20, "liquidity": 0.15, "resilience": 0.20},
 }
+# Sektör akış ailesi tüm rejim şablonlarına eklenir (mevcut aileler orantılı küçültülür)
+for _r, _w in REGIME_META_TEMPLATES.items():
+    REGIME_META_TEMPLATES[_r] = {**{k: round(v * (1 - SECTOR_TEMPLATE_WEIGHT), 4) for k, v in _w.items()},
+                                 "sector": SECTOR_TEMPLATE_WEIGHT}
 
 REGIME_MIN_SCORES = {"CRASH": 88.0, "STRESS": 83.0, "ROTATION": 77.0, "EXPANSION": 74.0, "QUIET": 72.0, "NORMAL": 75.0}
 
 FAMILY_COLS = {"event": "event_score", "flow": "flow_score", "activity": "activity_score",
-               "liquidity": "liquidity_score", "resilience": "resilience_score"}
+               "liquidity": "liquidity_score", "resilience": "resilience_score", "sector": "sector_score"}
+
+
+def profile_signs(profile):
+    s = (profile or {}).get("signs") or {}
+    return {k: (-1 if _num(s.get(k), 1.0) < 0 else 1) for k in DEFAULT_META_WEIGHTS}
 
 # Geriye uyumluluk (eski sürüm importları kırılmasın)
 DEFAULT_THRESHOLDS = {"th_vol": 1.5, "th_range": 1.5, "th_flow": 2.0, "th_lambda": 1.2}
@@ -93,11 +108,15 @@ def score_frame(df: pd.DataFrame, profiles: dict | None = None, threshold_offset
     meta = pd.Series(0.0, index=out.index)
     min_score = pd.Series(75.0, index=out.index)
     wcols = {k: pd.Series(0.0, index=out.index) for k in DEFAULT_META_WEIGHTS}
+    if "sector_score" not in out.columns:
+        out["sector_score"] = 50.0
     for (reg, conf), idx in out.groupby(["regime_label", "regime_confidence"]).groups.items():
         prof = profiles.get(reg) or default_profile(reg)
         w = runtime_weights(prof, reg, conf)
+        sg = profile_signs(prof)
         part = out.loc[idx]
-        meta.loc[idx] = sum(part[FAMILY_COLS[k]].fillna(50.0) * w[k] for k in w)
+        meta.loc[idx] = sum((part[FAMILY_COLS[k]].fillna(50.0) if sg[k] > 0 else 100.0 - part[FAMILY_COLS[k]].fillna(50.0)) * w[k]
+                            for k in w)
         min_score.loc[idx] = _num(prof.get("min_score"), REGIME_MIN_SCORES.get(reg, 75.0))
         for k in w:
             wcols[k].loc[idx] = w[k]

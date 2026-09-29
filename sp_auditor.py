@@ -44,7 +44,7 @@ def send_telegram_audit(message):
 
 
 def _slim(p):
-    return {k: p.get(k) for k in ("weights", "min_score", "regime", "version", "learned_edges",
+    return {k: p.get(k) for k in ("weights", "signs", "sign_stats", "min_score", "regime", "version", "learned_edges",
                                   "regime_days", "threshold_source", "train_metrics") if k in p}
 
 

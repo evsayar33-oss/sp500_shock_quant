@@ -105,6 +105,7 @@ RISK_PER_TRADE_PCT = 1.0            # pozisyon başına HORIZON-günlük 1σ ris
 MAX_POSITION_PCT = 12.0
 MIN_POSITION_PCT = 1.0
 MAX_POSITIONS = 8
+MAX_PER_GROUP = 3                  # istatistiksel grup (küme) başına en fazla pozisyon
 MAX_GROSS_PCT = 70.0
 MAX_PAIR_CORR = 0.70
 MAX_PER_SECTOR = 3
@@ -128,3 +129,12 @@ def slippage_bps(liq_tl):
 def round_trip_cost_pct(liq_tl):
     """Gidiş-dönüş toplam maliyet, yüzde puan."""
     return 2.0 * (COMMISSION_BPS + slippage_bps(liq_tl)) / 100.0
+
+
+# ------------------------------------------------------------------
+# Sektör / grup akış katmanı (sector_flow.py)
+# ------------------------------------------------------------------
+CLUSTER_LOOKBACK = 250              # küme kurulumunda kullanılan geçmiş gün (piyasadan arındırılmış getiri)
+CLUSTER_K = 16                      # en fazla küme sayısı
+CLUSTER_MIN_OBS = 150
+MIN_GROUP_SIZE = 4                  # bu sayıdan küçük gruplarda sektör özellikleri nötr (50)

@@ -50,7 +50,7 @@ c4.metric("📊 OOS Win-Rate (net)", f"%{bt.get('win_rate', 0):.1f}",
           f"LCB %{bt.get('wilson_lcb', 0):.1f} | N={bt.get('n', 0)}")
 
 st.divider()
-tab1, tab2, tab3, tab4 = st.tabs(["🚀 Günün Sinyalleri", "🛡️ Pozisyonlar", "🧪 Walk-Forward Raporu", "📒 Defter"])
+tab1, tab5, tab2, tab3, tab4 = st.tabs(["🚀 Günün Sinyalleri", "🧭 Sektör Akışı", "🛡️ Pozisyonlar", "🧪 Walk-Forward Raporu", "📒 Defter"])
 
 with tab1:
     if scan.empty:
@@ -79,6 +79,31 @@ with tab1:
             else:
                 st.line_chart(h.set_index("tarih")[[c for c in ["watch_score", "effective_min_score"] if c in h.columns]])
                 st.json(h.iloc[-1].dropna().to_dict(), expanded=False)
+
+with tab5:
+    st.caption("Gruplar, son 250 günün piyasadan arındırılmış getiri korelasyonlarından her ay yeniden kurulan "
+               "istatistiksel kümelerdir (birlikte hareket eden sepetler). Birikim = grup ortalama CMF + genişlik.")
+    try:
+        board = pd.read_json(os.path.join("data", "sector_board.json"))
+    except Exception:
+        board = pd.DataFrame()
+    if board.empty:
+        st.info("Sektör akış panosu bir sonraki taramada oluşacak.")
+    else:
+        show = board.rename(columns={"grp": "Grup", "name": "Liderler", "n": "Üye", "sec_cmf": "Grup CMF",
+                                     "sec_acc": "Birikim genişliği", "sec_ret5": "5g göreli %", "sec_ret20": "20g göreli %",
+                                     "score": "Akış skoru", "stealth": "Sessiz birikim", "side": "Yön"})
+        st.dataframe(show, hide_index=True, use_container_width=True)
+    if not scan.empty and "grp" in scan.columns:
+        today_s = scan[scan["tarih"] == scan["tarih"].max()]
+        if "sector_score" in today_s.columns:
+            st.subheader("Grup bazında akış skoru dağılımı")
+            st.bar_chart(today_s.groupby("grp")["sector_score"].median().sort_values(ascending=False))
+    prof = state.get("meta_engine", {}).get("regime_profiles", {}).get(reg.get("label", "NORMAL"), {})
+    if prof.get("signs"):
+        st.subheader("Öğrenilen aile işaretleri ve ağırlıkları (aktif rejim)")
+        st.dataframe(pd.DataFrame({"ağırlık": prof.get("weights", {}), "işaret": prof.get("signs", {})}),
+                     use_container_width=True)
 
 with tab2:
     if ledger.empty or "label_version" not in ledger.columns:
