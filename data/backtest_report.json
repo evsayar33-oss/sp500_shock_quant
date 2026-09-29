@@ -1,0 +1,327 @@
+{
+  "generated": "2026-09-28T21:19:00",
+  "days": 746,
+  "horizon": 5,
+  "cost_model": {
+    "commission_bps": 1.0,
+    "slippage": "base+coef/sqrt(liq)"
+  },
+  "candidate_oos": {
+    "n": 3245,
+    "wins": 1609,
+    "win_rate": 49.58,
+    "wilson_lcb": 48.46,
+    "profit_factor": 1.03,
+    "avg_return": 0.063,
+    "median": -0.039,
+    "p10": -6.368,
+    "cohort_t": 2.14,
+    "n_cohorts": 94,
+    "days": 468
+  },
+  "active_oos": {
+    "n": 3120,
+    "wins": 1554,
+    "win_rate": 49.81,
+    "wilson_lcb": 48.66,
+    "profit_factor": 1.051,
+    "avg_return": 0.104,
+    "median": -0.027,
+    "p10": -6.308,
+    "cohort_t": 1.46,
+    "n_cohorts": 94,
+    "days": 466
+  },
+  "template_oos": {
+    "n": 3120,
+    "wins": 1554,
+    "win_rate": 49.81,
+    "wilson_lcb": 48.66,
+    "profit_factor": 1.051,
+    "avg_return": 0.104,
+    "median": -0.027,
+    "p10": -6.308,
+    "cohort_t": 1.46,
+    "n_cohorts": 94,
+    "days": 466
+  },
+  "ic_oos": {
+    "event": {
+      "ic": -0.0086,
+      "t": -0.71,
+      "days": 468
+    },
+    "flow": {
+      "ic": 0.0087,
+      "t": 0.6,
+      "days": 468
+    },
+    "activity": {
+      "ic": 0.0001,
+      "t": 0.01,
+      "days": 468
+    },
+    "liquidity": {
+      "ic": 0.0194,
+      "t": 1.3,
+      "days": 468
+    },
+    "resilience": {
+      "ic": 0.0112,
+      "t": 0.67,
+      "days": 468
+    }
+  },
+  "folds": [
+    {
+      "train_end": "2024-09-26",
+      "test_start": "2024-10-07",
+      "test_end": "2025-01-06",
+      "candidate": {
+        "n": 380,
+        "wins": 169,
+        "win_rate": 44.47,
+        "wilson_lcb": 41.24,
+        "profit_factor": 0.778,
+        "avg_return": -0.42,
+        "median": -0.478,
+        "p10": -5.353,
+        "cohort_t": 2.09,
+        "n_cohorts": 12,
+        "days": 60
+      },
+      "active": {
+        "n": 379,
+        "wins": 172,
+        "win_rate": 45.38,
+        "wilson_lcb": 42.13,
+        "profit_factor": 0.828,
+        "avg_return": -0.31,
+        "median": -0.461,
+        "p10": -5.125,
+        "cohort_t": 2.11,
+        "n_cohorts": 12,
+        "days": 60
+      }
+    },
+    {
+      "train_end": "2024-12-26",
+      "test_start": "2025-01-07",
+      "test_end": "2025-04-08",
+      "candidate": {
+        "n": 384,
+        "wins": 194,
+        "win_rate": 50.52,
+        "wilson_lcb": 47.26,
+        "profit_factor": 0.597,
+        "avg_return": -1.063,
+        "median": 0.037,
+        "p10": -9.364,
+        "cohort_t": 0.52,
+        "n_cohorts": 11,
+        "days": 55
+      },
+      "active": {
+        "n": 359,
+        "wins": 179,
+        "win_rate": 49.86,
+        "wilson_lcb": 46.49,
+        "profit_factor": 0.57,
+        "avg_return": -1.121,
+        "median": -0.008,
+        "p10": -9.099,
+        "cohort_t": -0.23,
+        "n_cohorts": 12,
+        "days": 57
+      }
+    },
+    {
+      "train_end": "2025-03-31",
+      "test_start": "2025-04-09",
+      "test_end": "2025-07-10",
+      "candidate": {
+        "n": 415,
+        "wins": 218,
+        "win_rate": 52.53,
+        "wilson_lcb": 49.38,
+        "profit_factor": 1.425,
+        "avg_return": 0.603,
+        "median": 0.22,
+        "p10": -4.64,
+        "cohort_t": 0.05,
+        "n_cohorts": 12,
+        "days": 59
+      },
+      "active": {
+        "n": 386,
+        "wins": 207,
+        "win_rate": 53.63,
+        "wilson_lcb": 50.37,
+        "profit_factor": 1.536,
+        "avg_return": 0.715,
+        "median": 0.244,
+        "p10": -4.299,
+        "cohort_t": 0.12,
+        "n_cohorts": 12,
+        "days": 58
+      }
+    },
+    {
+      "train_end": "2025-07-01",
+      "test_start": "2025-07-11",
+      "test_end": "2025-10-08",
+      "candidate": {
+        "n": 439,
+        "wins": 241,
+        "win_rate": 54.9,
+        "wilson_lcb": 51.84,
+        "profit_factor": 1.528,
+        "avg_return": 0.722,
+        "median": 0.462,
+        "p10": -4.67,
+        "cohort_t": 0.25,
+        "n_cohorts": 13,
+        "days": 61
+      },
+      "active": {
+        "n": 425,
+        "wins": 230,
+        "win_rate": 54.12,
+        "wilson_lcb": 51.01,
+        "profit_factor": 1.601,
+        "avg_return": 0.8,
+        "median": 0.367,
+        "p10": -4.422,
+        "cohort_t": 0.26,
+        "n_cohorts": 13,
+        "days": 61
+      }
+    },
+    {
+      "train_end": "2025-09-30",
+      "test_start": "2025-10-09",
+      "test_end": "2026-01-08",
+      "candidate": {
+        "n": 418,
+        "wins": 216,
+        "win_rate": 51.67,
+        "wilson_lcb": 48.54,
+        "profit_factor": 1.176,
+        "avg_return": 0.285,
+        "median": 0.081,
+        "p10": -4.957,
+        "cohort_t": 1.41,
+        "n_cohorts": 13,
+        "days": 62
+      },
+      "active": {
+        "n": 412,
+        "wins": 216,
+        "win_rate": 52.43,
+        "wilson_lcb": 49.27,
+        "profit_factor": 1.211,
+        "avg_return": 0.337,
+        "median": 0.132,
+        "p10": -5.016,
+        "cohort_t": 1.45,
+        "n_cohorts": 13,
+        "days": 62
+      }
+    },
+    {
+      "train_end": "2025-12-30",
+      "test_start": "2026-01-09",
+      "test_end": "2026-04-10",
+      "candidate": {
+        "n": 380,
+        "wins": 197,
+        "win_rate": 51.84,
+        "wilson_lcb": 48.56,
+        "profit_factor": 1.493,
+        "avg_return": 0.985,
+        "median": 0.468,
+        "p10": -6.462,
+        "cohort_t": -0.29,
+        "n_cohorts": 12,
+        "days": 60
+      },
+      "active": {
+        "n": 372,
+        "wins": 197,
+        "win_rate": 52.96,
+        "wilson_lcb": 49.63,
+        "profit_factor": 1.532,
+        "avg_return": 1.018,
+        "median": 0.549,
+        "p10": -6.367,
+        "cohort_t": 1.22,
+        "n_cohorts": 12,
+        "days": 58
+      }
+    },
+    {
+      "train_end": "2026-04-01",
+      "test_start": "2026-04-13",
+      "test_end": "2026-07-13",
+      "candidate": {
+        "n": 472,
+        "wins": 227,
+        "win_rate": 48.09,
+        "wilson_lcb": 45.16,
+        "profit_factor": 0.974,
+        "avg_return": -0.083,
+        "median": -0.33,
+        "p10": -9.221,
+        "cohort_t": -1.09,
+        "n_cohorts": 13,
+        "days": 62
+      },
+      "active": {
+        "n": 456,
+        "wins": 216,
+        "win_rate": 47.37,
+        "wilson_lcb": 44.39,
+        "profit_factor": 0.977,
+        "avg_return": -0.075,
+        "median": -0.354,
+        "p10": -9.246,
+        "cohort_t": -0.72,
+        "n_cohorts": 13,
+        "days": 62
+      }
+    },
+    {
+      "train_end": "2026-07-02",
+      "test_start": "2026-07-14",
+      "test_end": "2026-09-21",
+      "candidate": {
+        "n": 357,
+        "wins": 147,
+        "win_rate": 41.18,
+        "wilson_lcb": 37.89,
+        "profit_factor": 0.71,
+        "avg_return": -0.699,
+        "median": -0.63,
+        "p10": -7.057,
+        "cohort_t": -3.01,
+        "n_cohorts": 10,
+        "days": 49
+      },
+      "active": {
+        "n": 331,
+        "wins": 137,
+        "win_rate": 41.39,
+        "wilson_lcb": 37.97,
+        "profit_factor": 0.681,
+        "avg_return": -0.772,
+        "median": -0.716,
+        "p10": -7.175,
+        "cohort_t": -0.75,
+        "n_cohorts": 10,
+        "days": 48
+      }
+    }
+  ],
+  "decision": "Aday mutlak tabanı geçemedi (ort +0.06, PF 1.03)",
+  "promoted": false
+}
