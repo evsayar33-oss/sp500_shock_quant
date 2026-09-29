@@ -1,11 +1,7 @@
 {
-  "generated": "2026-09-29T07:19:33",
+  "generated": "2026-09-29T08:15:38",
   "days": 745,
   "horizon": 5,
-  "cost_model": {
-    "commission_bps": 1.0,
-    "slippage": "base+coef/sqrt(liq)"
-  },
   "candidate_oos": {
     "n": 3116,
     "wins": 1586,
@@ -15,8 +11,8 @@
     "avg_return": 0.154,
     "median": 0.048,
     "p10": -6.022,
-    "cohort_t": 2.33,
-    "n_cohorts": 92,
+    "cohort_t": 0.59,
+    "n_cohorts": 91,
     "days": 457
   },
   "active_oos": {
@@ -28,8 +24,8 @@
     "avg_return": 0.341,
     "median": 0.046,
     "p10": -6.027,
-    "cohort_t": 3.63,
-    "n_cohorts": 85,
+    "cohort_t": 1.1,
+    "n_cohorts": 84,
     "days": 423
   },
   "template_oos": {
@@ -41,9 +37,78 @@
     "avg_return": 0.341,
     "median": 0.046,
     "p10": -6.027,
-    "cohort_t": 3.63,
-    "n_cohorts": 85,
+    "cohort_t": 1.1,
+    "n_cohorts": 84,
     "days": 423
+  },
+  "meta_oos": {
+    "n": 475,
+    "wins": 270,
+    "win_rate": 56.84,
+    "wilson_lcb": 53.91,
+    "profit_factor": 1.782,
+    "avg_return": 1.407,
+    "median": 0.875,
+    "p10": -5.756,
+    "cohort_t": 0.87,
+    "n_cohorts": 24,
+    "days": 121
+  },
+  "meta_enabled": true,
+  "meta_note": "meta LCB +4.57pp | net +1.07 | PF 1.78 vs 1.18 | t=0.87",
+  "exit_variants": {
+    "T+5 zaman": {
+      "n": 475,
+      "wins": 270,
+      "win_rate": 56.84,
+      "wilson_lcb": 53.91,
+      "profit_factor": 1.782,
+      "avg_return": 1.407,
+      "median": 0.875,
+      "p10": -5.756,
+      "cohort_t": 0.87,
+      "n_cohorts": 24,
+      "days": 121
+    },
+    "TP 1×ATR": {
+      "n": 475,
+      "wins": 309,
+      "win_rate": 65.05,
+      "wilson_lcb": 62.2,
+      "profit_factor": 1.568,
+      "avg_return": 0.847,
+      "median": 1.876,
+      "p10": -5.127,
+      "cohort_t": 0.65,
+      "n_cohorts": 24,
+      "days": 121
+    },
+    "TP 1.5×ATR": {
+      "n": 475,
+      "wins": 284,
+      "win_rate": 59.79,
+      "wilson_lcb": 56.88,
+      "profit_factor": 1.694,
+      "avg_return": 1.155,
+      "median": 1.327,
+      "p10": -5.39,
+      "cohort_t": 0.89,
+      "n_cohorts": 24,
+      "days": 121
+    },
+    "TP 2×ATR": {
+      "n": 475,
+      "wins": 275,
+      "win_rate": 57.89,
+      "wilson_lcb": 54.97,
+      "profit_factor": 1.688,
+      "avg_return": 1.22,
+      "median": 0.955,
+      "p10": -5.756,
+      "cohort_t": 0.86,
+      "n_cohorts": 24,
+      "days": 121
+    }
   },
   "ic_oos": {
     "event": {
@@ -91,8 +156,8 @@
         "avg_return": -0.677,
         "median": -0.666,
         "p10": -5.113,
-        "cohort_t": -1.4,
-        "n_cohorts": 12,
+        "cohort_t": -0.82,
+        "n_cohorts": 11,
         "days": 59
       },
       "active": {
@@ -104,10 +169,25 @@
         "avg_return": -0.434,
         "median": -0.534,
         "p10": -5.347,
-        "cohort_t": 1.92,
-        "n_cohorts": 11,
+        "cohort_t": 0.15,
+        "n_cohorts": 10,
         "days": 54
-      }
+      },
+      "meta": {
+        "n": 205,
+        "wins": 107,
+        "win_rate": 52.2,
+        "wilson_lcb": 47.72,
+        "profit_factor": 1.768,
+        "avg_return": 0.988,
+        "median": 0.25,
+        "p10": -3.662,
+        "cohort_t": 0.48,
+        "n_cohorts": 8,
+        "days": 40
+      },
+      "meta_on": true,
+      "gate": "UP"
     },
     {
       "train_end": "2024-12-27",
@@ -122,8 +202,8 @@
         "avg_return": -0.956,
         "median": 0.077,
         "p10": -7.984,
-        "cohort_t": -0.56,
-        "n_cohorts": 12,
+        "cohort_t": -0.62,
+        "n_cohorts": 11,
         "days": 58
       },
       "active": {
@@ -135,10 +215,25 @@
         "avg_return": -1.139,
         "median": -0.397,
         "p10": -9.342,
-        "cohort_t": -0.37,
-        "n_cohorts": 10,
+        "cohort_t": -0.8,
+        "n_cohorts": 9,
         "days": 49
-      }
+      },
+      "meta": {
+        "n": 75,
+        "wins": 48,
+        "win_rate": 64.0,
+        "wilson_lcb": 56.67,
+        "profit_factor": 1.287,
+        "avg_return": 0.561,
+        "median": 1.576,
+        "p10": -6.049,
+        "cohort_t": 0.32,
+        "n_cohorts": 2,
+        "days": 14
+      },
+      "meta_on": true,
+      "gate": "UP"
     },
     {
       "train_end": "2025-04-01",
@@ -153,7 +248,7 @@
         "avg_return": 0.82,
         "median": 0.614,
         "p10": -4.302,
-        "cohort_t": 1.62,
+        "cohort_t": 1.26,
         "n_cohorts": 11,
         "days": 55
       },
@@ -166,10 +261,25 @@
         "avg_return": 0.78,
         "median": 0.483,
         "p10": -4.427,
-        "cohort_t": 0.59,
-        "n_cohorts": 11,
+        "cohort_t": 0.98,
+        "n_cohorts": 10,
         "days": 52
-      }
+      },
+      "meta": {
+        "n": 23,
+        "wins": 13,
+        "win_rate": 56.52,
+        "wilson_lcb": 43.28,
+        "profit_factor": 1.656,
+        "avg_return": 0.635,
+        "median": 1.095,
+        "p10": -3.171,
+        "cohort_t": 0.0,
+        "n_cohorts": 1,
+        "days": 6
+      },
+      "meta_on": true,
+      "gate": "UP"
     },
     {
       "train_end": "2025-07-02",
@@ -184,8 +294,8 @@
         "avg_return": 0.795,
         "median": 0.573,
         "p10": -4.633,
-        "cohort_t": 1.72,
-        "n_cohorts": 13,
+        "cohort_t": 1.14,
+        "n_cohorts": 12,
         "days": 63
       },
       "active": {
@@ -197,10 +307,25 @@
         "avg_return": 0.953,
         "median": 0.608,
         "p10": -4.161,
-        "cohort_t": 2.06,
-        "n_cohorts": 12,
+        "cohort_t": 1.33,
+        "n_cohorts": 11,
         "days": 56
-      }
+      },
+      "meta": {
+        "n": 3,
+        "wins": 2,
+        "win_rate": 66.67,
+        "wilson_lcb": 32.12,
+        "profit_factor": 2.878,
+        "avg_return": 1.562,
+        "median": 2.519,
+        "p10": -1.492,
+        "cohort_t": 0.0,
+        "n_cohorts": 0,
+        "days": 3
+      },
+      "meta_on": true,
+      "gate": "UP"
     },
     {
       "train_end": "2025-10-01",
@@ -215,8 +340,8 @@
         "avg_return": 0.325,
         "median": 0.111,
         "p10": -5.016,
-        "cohort_t": 1.68,
-        "n_cohorts": 12,
+        "cohort_t": 0.39,
+        "n_cohorts": 11,
         "days": 59
       },
       "active": {
@@ -228,10 +353,25 @@
         "avg_return": 0.683,
         "median": 0.326,
         "p10": -4.691,
-        "cohort_t": 1.31,
-        "n_cohorts": 12,
+        "cohort_t": 0.88,
+        "n_cohorts": 11,
         "days": 58
-      }
+      },
+      "meta": {
+        "n": 37,
+        "wins": 14,
+        "win_rate": 37.84,
+        "wilson_lcb": 28.34,
+        "profit_factor": 0.558,
+        "avg_return": -1.302,
+        "median": -1.022,
+        "p10": -8.734,
+        "cohort_t": -0.39,
+        "n_cohorts": 3,
+        "days": 16
+      },
+      "meta_on": true,
+      "gate": "UP"
     },
     {
       "train_end": "2025-12-31",
@@ -246,8 +386,8 @@
         "avg_return": 1.514,
         "median": 0.767,
         "p10": -5.231,
-        "cohort_t": 0.18,
-        "n_cohorts": 11,
+        "cohort_t": 1.0,
+        "n_cohorts": 10,
         "days": 54
       },
       "active": {
@@ -259,10 +399,25 @@
         "avg_return": 1.901,
         "median": 0.751,
         "p10": -4.706,
-        "cohort_t": 1.24,
+        "cohort_t": 1.09,
         "n_cohorts": 10,
         "days": 50
-      }
+      },
+      "meta": {
+        "n": 82,
+        "wins": 50,
+        "win_rate": 60.98,
+        "wilson_lcb": 53.92,
+        "profit_factor": 2.702,
+        "avg_return": 3.85,
+        "median": 2.501,
+        "p10": -6.49,
+        "cohort_t": 0.92,
+        "n_cohorts": 3,
+        "days": 18
+      },
+      "meta_on": true,
+      "gate": "UP"
     },
     {
       "train_end": "2026-04-02",
@@ -277,8 +432,8 @@
         "avg_return": -0.321,
         "median": -0.471,
         "p10": -9.291,
-        "cohort_t": 0.25,
-        "n_cohorts": 13,
+        "cohort_t": -0.21,
+        "n_cohorts": 12,
         "days": 62
       },
       "active": {
@@ -290,10 +445,25 @@
         "avg_return": -0.152,
         "median": -0.442,
         "p10": -9.701,
-        "cohort_t": 0.51,
+        "cohort_t": 0.16,
         "n_cohorts": 12,
         "days": 60
-      }
+      },
+      "meta": {
+        "n": 27,
+        "wins": 20,
+        "win_rate": 74.07,
+        "wilson_lcb": 62.11,
+        "profit_factor": 1.791,
+        "avg_return": 2.55,
+        "median": 2.237,
+        "p10": -14.023,
+        "cohort_t": 0.23,
+        "n_cohorts": 3,
+        "days": 16
+      },
+      "meta_on": true,
+      "gate": "UP"
     },
     {
       "train_end": "2026-07-06",
@@ -308,8 +478,8 @@
         "avg_return": -0.131,
         "median": -0.14,
         "p10": -6.011,
-        "cohort_t": 0.75,
-        "n_cohorts": 10,
+        "cohort_t": -0.05,
+        "n_cohorts": 9,
         "days": 47
       },
       "active": {
@@ -321,10 +491,25 @@
         "avg_return": 0.164,
         "median": -0.133,
         "p10": -5.829,
-        "cohort_t": 1.53,
-        "n_cohorts": 9,
+        "cohort_t": 0.09,
+        "n_cohorts": 8,
         "days": 44
-      }
+      },
+      "meta": {
+        "n": 23,
+        "wins": 16,
+        "win_rate": 69.57,
+        "wilson_lcb": 56.31,
+        "profit_factor": 2.802,
+        "avg_return": 2.953,
+        "median": 3.973,
+        "p10": -7.038,
+        "cohort_t": 0.0,
+        "n_cohorts": 1,
+        "days": 8
+      },
+      "meta_on": true,
+      "gate": "UP"
     }
   ],
   "decision": "PF bozulması (1.08 vs 1.18)",
