@@ -26,7 +26,7 @@ TRADE_COLS = ["date", "ticker", "label_version", "signal_close", "weight_pct", "
               "effective_min_score", "p_win", "regime", "macro_label", "grp", "grp_name", "liq20", "cost_rt",
               "entry_date", "entry_price", "stop_price", "tp1_price", "tp2_price", "status", "exit_reason",
               "exit_date", "days", "tp1_hit", "tp1_date", "tp2_hit", "stop_hit", "mtm_ret", "net_ret",
-              "d1", "d2", "d3", "d4", "d5", "is_completed"]
+              *[f"d{k}" for k in range(1, C.HORIZON + 1)], "is_completed"]
 STATUS_TXT = {"PENDING": "Açılışta alınacak", "OPEN": "Açık", "TP1": "TP1 ✓ (stop girişte)", "CLOSED": "Kapandı"}
 
 

@@ -263,8 +263,8 @@ with t3:
                                         "Stop": st.column_config.NumberColumn(format="%.2f"),
                                         "TP1": st.column_config.NumberColumn(format="%.2f"),
                                         "TP2": st.column_config.NumberColumn(format="%.2f")})
-            st.caption("TP1'de pozisyonun yarısı satılır ve stop giriş fiyatına çekilir; kalan kısım TP2'de ya da en geç "
-                       f"{C.HORIZON}. gün kapanışında satılır.")
+            from report import rule_text
+            st.caption("Çıkış kuralı: " + rule_text())
 
 with t6:
     ls = load_json(os.path.join(C.DATA_DIR, "live_summary.json"))
@@ -283,7 +283,7 @@ with t6:
         card(d, "TP1 / Stop oranı", f"%{num(ls.get('tp1_rate')):.0f} / %{num(ls.get('stop_rate')):.0f}" if la.get("n") else "—",
              f"son 20 kazanma %{num(l20.get('win_rate')):.0f}" if l20.get("n", 0) >= 20 else "son 20: veri birikiyor")
         st.write("")
-        st.markdown(f"**5 günlük işlem tablosu** <span class='muted'>(G1–G{C.HORIZON}: girişe göre günlük kapanış getirisi, %; "
+        st.markdown(f"**{C.HORIZON} günlük işlem tablosu** <span class='muted'>(G1–G{C.HORIZON}: girişe göre günlük kapanış getirisi, %; "
                     f"canlı takip başlangıcı {ls.get('since', '-')})</span>", unsafe_allow_html=True)
         if lt.empty:
             st.info("Henüz sinyal yok.")

@@ -8,7 +8,9 @@ Tasarım ilkeleri
 """
 from __future__ import annotations
 
+import html
 import os
+import re
 from datetime import datetime
 
 import numpy as np
@@ -28,6 +30,17 @@ MACRO_TXT = {"RISK_ON": "🟢 Risk iştahı", "NEUTRAL": "⚪ Nötr", "RISK_OFF"
 GUARD_TXT = {"NORMAL": "🟢 Normal", "WATCH": "🟡 Temkinli", "SAFE": "🔴 Koruma (yeni giriş yok)",
              "RECOVERY": "🟠 Toparlanma"}
 TR_MONTHS = ["Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"]
+
+
+def _e(x) -> str:
+    """Telegram HTML için güvenli metin ('<', '>', '&' etiket sanılmasın). v3.1'de BIST mesajı
+    't=0.81 < 1.0' yüzünden reddediliyor ve ham etiketlerle gönderiliyordu."""
+    return html.escape(str(x), quote=False)
+
+
+def _plain(msg: str) -> str:
+    """HTML yine reddedilirse: etiketleri temizleyip düz metin gönder (ham etiket asla görünmez)."""
+    return html.unescape(re.sub(r"</?(b|i|pre|code)>", "", msg))
 
 
 def _d(day) -> str:
@@ -68,7 +81,9 @@ def send(message: str):
         try:
             res = requests.post(url, json=payload, timeout=15)
             if not res.json().get("ok"):
+                print(f"Telegram HTML reddetti: {res.json().get('description')}")
                 payload.pop("parse_mode", None)
+                payload["text"] = _plain(msg)
                 requests.post(url, json=payload, timeout=15)
         except Exception as exc:
             print(f"Telegram hatası: {exc}")
@@ -77,7 +92,16 @@ def send(message: str):
 # ------------------------------------------------------------------
 # Günlük sinyal mesajı
 # ------------------------------------------------------------------
-EVENT_TXT = {"GİRİŞ": ("🔵", "girildi"), "TP1": ("✅", "TP1 geldi · yarısı satıldı · stop girişe çekildi"),
+def rule_text() -> str:
+    s, a, b = getattr(C, "EXIT_STOP_ATR", 2), getattr(C, "EXIT_TP1_ATR", 1), getattr(C, "EXIT_TP2_ATR", None)
+    if b:
+        return f"TP1 {a:g}×ATR'de yarısı satılır, stop girişe · TP2 {b:g}×ATR · stop {s:g}×ATR · en geç {C.HORIZON}. gün"
+    return f"TP1 {a:g}×ATR'de tamamı satılır · stop {s:g}×ATR · en geç {C.HORIZON}. gün"
+
+
+EVENT_TXT = {"GİRİŞ": ("🔵", "girildi"),
+             "TP1": ("✅", "TP1 geldi · kâr alındı · kapandı" if not getattr(C, "EXIT_TP2_ATR", None)
+                     else "TP1 geldi · yarısı satıldı · stop girişe çekildi"),
              "TP2": ("🏁", "TP2 geldi · kapandı"), "STOP": ("⛔", "stop · kapandı"), "BAŞABAŞ": ("⚪", "başabaş stop · kapandı"),
              "SÜRE": ("⏰", f"{getattr(C, 'HORIZON', 5)}. gün · kapandı")}
 
@@ -106,7 +130,7 @@ def scan_message(ctx: dict) -> str:
         lines.append(_health_line(hl))
         bad = [i for i in hl.get("items", []) if i["level"] != "ok"][:3]
         for i in bad:
-            lines.append(f"   {'🔴' if i['level'] == 'bad' else '🟡'} <i>{i['name']}: {i['detail']}</i>")
+            lines.append(f"   {'🔴' if i['level'] == 'bad' else '🟡'} <i>{_e(i['name'])}: {_e(i['detail'])}</i>")
     lines += ["", SEP]
 
     events = ctx.get("events") or []
@@ -115,21 +139,21 @@ def scan_message(ctx: dict) -> str:
         for e in events:
             ic, txt = EVENT_TXT.get(e["event"], ("•", e["event"]))
             net = f" · net <b>%{_f(e['net']):+.2f}</b>" if e.get("net") is not None else ""
-            lines.append(f"{ic} <b>{e['ticker']}</b> {txt}{net}")
+            lines.append(f"{ic} <b>{_e(e['ticker'])}</b> {txt}{net}")
         lines += ["", SEP]
 
     if picks:
         lines.append(f"🎯 <b>YENİ SİNYALLER ({len(picks)})</b>")
-        lines.append(f"<i>Giriş: sonraki seans açılışı · TP1'de yarısı satılır, stop girişe çekilir · en geç {C.HORIZON}. gün kapanışı</i>")
+        lines.append(f"<i>Giriş: sonraki seans açılışı · {rule_text()}</i>")
         for i, p in enumerate(picks, 1):
             prob = f" · Kazanma olasılığı <b>%{_f(p.get('p_win')) * 100:.0f}</b>" if p.get("p_win") == p.get("p_win") and p.get("p_win") is not None else ""
             lines.append("")
-            lines.append(f"<b>{i}) {p['ticker']}</b>  {_px(p.get('close'))}  <i>(%{_f(p.get('change')):+.1f})</i>")
+            lines.append(f"<b>{i}) {_e(p['ticker'])}</b>  {_px(p.get('close'))}  <i>(%{_f(p.get('change')):+.1f})</i>")
             lines.append(f"   Skor {_f(p.get('score')):.0f}/{_f(p.get('thr')):.0f}{prob} · Ağırlık <b>%{_f(p.get('weight')):.1f}</b>")
             lines.append(_levels_line(p, approx=True))
             if p.get("group"):
                 flow = "birikimde" if _f(p.get("sec_cmf")) > 0 else "görece güçlü"
-                lines.append(f"   🧭 Grup {flow}: <i>{p['group']}</i>")
+                lines.append(f"   🧭 Grup {flow}: <i>{_e(p['group'])}</i>")
         lines.append("<i>≈ seviyeler kapanışa göre; giriş fiyatı kesinleşince güncellenir.</i>")
     else:
         lines.append("🎯 <b>Bugün yeni sinyal yok</b>")
@@ -140,7 +164,7 @@ def scan_message(ctx: dict) -> str:
                 extra = ""
                 if w.get("p_win") is not None and w.get("p_win") == w.get("p_win"):
                     extra = f" · olasılık %{_f(w['p_win']) * 100:.0f} (gereken %{_f(w.get('q')) * 100:.0f})"
-                lines.append(f"• {w['ticker']}  skor {_f(w['score']):.1f}/{_f(w['thr']):.1f}{extra}")
+                lines.append(f"• {_e(w['ticker'])}  skor {_f(w['score']):.1f}/{_f(w['thr']):.1f}{extra}")
 
     if positions:
         lines += ["", SEP, f"📂 <b>POZİSYONLAR ({len(positions)})</b>", "<pre>"]
@@ -155,7 +179,7 @@ def scan_message(ctx: dict) -> str:
             if p["status"] != "PENDING":
                 t2 = f" · TP2 {_px(p['tp2'])}" if p.get("tp2") == p.get("tp2") and p.get("tp2") else ""
                 stop_txt = "stop giriş" if p["status"] == "TP1" else f"stop {_px(p.get('stop'))}"
-                lines.append(f"<i>{p['ticker']}: {stop_txt} · TP1 {_px(p.get('tp1'))}{t2}</i>")
+                lines.append(f"<i>{_e(p['ticker'])}: {stop_txt} · TP1 {_px(p.get('tp1'))}{t2}</i>")
 
     live = ctx.get("live") or {}
     la = live.get("all") or {}
@@ -182,9 +206,9 @@ def scan_message(ctx: dict) -> str:
             for _, b in up.iterrows():
                 stealth = " 🕵️" if _f(b.get("stealth")) >= 0.35 and b["side"] == "BİRİKİM" else ""
                 dot = "🟢" if b["side"] == "BİRİKİM" else "🟡"
-                lines.append(f"{dot} {b['name']}{stealth}")
+                lines.append(f"{dot} {_e(b['name'])}{stealth}")
             for _, b in dn.iterrows():
-                lines.append(f"🔴 {b['name']}")
+                lines.append(f"🔴 {_e(b['name'])}")
 
     sc = ctx.get("scorecard") or {}
     if sc.get("n"):
@@ -207,16 +231,16 @@ def audit_message(ctx: dict) -> str:
     lines = [f"🧠 <b>{TITLE} · Model Denetimi</b>", f"<i>{_d(ctx.get('day', datetime.now()))} · "
              f"{ctx.get('days', 0)} gün, {ctx.get('tickers', 0)} hisse</i>", ""]
     if not ctx.get("ok"):
-        lines.append(f"⏳ {ctx.get('note', 'Isınma aşaması')}")
+        lines.append(f"⏳ {_e(ctx.get('note', 'Isınma aşaması'))}")
         return "\n".join(lines)
 
     status = ctx.get("status")
     head = {"PROMOTED": "✅ <b>Yeni model devreye alındı</b>", "ROLLBACK": "↩️ <b>Önceki modele dönüldü</b>",
             "KEPT": "⏸️ <b>Mevcut model korundu</b>"}.get(status, status)
-    lines += [head, f"<i>{ctx.get('note', '')}</i>"]
+    lines += [head, f"<i>{_e(ctx.get('note', ''))}</i>"]
     rt = ctx.get("retrain") or {}
     if rt.get("strong"):
-        lines.append(f"🔁 <i>Güçlü yeniden eğitim ({', '.join(rt.get('reasons') or ['tetikleyici'])}) · seçilen: {rt.get('mode')}</i>")
+        lines.append(f"🔁 <i>Güçlü yeniden eğitim ({_e(', '.join(rt.get('reasons') or ['tetikleyici']))}) · seçilen: {_e(rt.get('mode'))}</i>")
     lines.append("")
 
     a, c = ctx["active"], ctx["candidate"]
@@ -239,12 +263,13 @@ def audit_message(ctx: dict) -> str:
     rates = ex.get("_rates") or {}
     rows = {k: v for k, v in ex.items() if not k.startswith("_") and v.get("n")}
     if rows:
-        lines += ["", "🚪 <b>Çıkış kuralı (stop · TP1 → stop girişe · TP2)</b>", "<pre>", f"{'':<12}{'Kazanma':>8}{'Net':>9}"]
+        lines += ["", f"🚪 <b>Çıkış kuralı</b> <i>({rule_text()})</i>", "<pre>", f"{'':<12}{'Kazanma':>8}{'Net':>9}"]
         for name, e in rows.items():
             lines.append(f"{name:<12}{e['win_rate']:>7.1f}%{e['avg_return']:>+8.2f}%")
         lines.append("</pre>")
         if rates:
-            lines.append(f"<i>TP1'e ulaşma %{rates.get('tp1', 0):.0f} · TP1 sonrası TP2 %{rates.get('tp2_given_tp1', 0):.0f} · stop %{rates.get('stop', 0):.0f}</i>")
+            tp2 = f" · TP1 sonrası TP2 %{rates.get('tp2_given_tp1', 0):.0f}" if getattr(C, "EXIT_TP2_ATR", None) else ""
+            lines.append(f"<i>🎯 TP1'e ulaşma <b>%{rates.get('tp1', 0):.0f}</b>{tp2} · stop %{rates.get('stop', 0):.0f}</i>")
 
     drivers = ctx.get("drivers") or []
     if drivers:

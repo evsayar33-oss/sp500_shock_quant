@@ -55,7 +55,7 @@ MACRO_TICKERS = {
 # ------------------------------------------------------------------
 # İşlem tanımı (etiket = canlı işlem ile BİREBİR aynı)
 # ------------------------------------------------------------------
-HORIZON = 5                         # T+5 kapanışta çıkış
+HORIZON = 10                        # en uzun elde tutma: 10 işlem günü (v3.2: 5 gün TP1 için fiziksel olarak kısaydı)
 # Sinyal: T günü kapanış sonrası. Giriş: T+1 açılış. Çıkış: T+HORIZON kapanış.
 
 # Maliyet modeli (tek yön, baz puan) — ABD büyük şirketleri
@@ -152,11 +152,13 @@ META_MIN_T = 0.0                    # olasılık filtresi: yön şartı (asıl k
 META_MIN_FOLD_SHARE = 0.6           # filtre, dilimlerin en az %60ında aktif modeli net getiride geçmeli
 
 # ------------------------------------------------------------------
-# v3 çıkış kuralı (gerçek veride seçildi: ilk yarıda seçim, son yarıda sınama; kullanıcı onayı "Dengeli")
+# v3.2 çıkış kuralı — gerçek veride tam sistem provasıyla seçildi (kullanıcı onayı):
+#   5 günde fiyat medyan yalnızca ~1.0×ATR gidebiliyor (MFE/ATR medyanı BIST 1.04, S&P 1.01);
+#   1.5×ATR TP1 ancak %35 isabet ediyordu. 10 gün + TP1 1.0×ATR tam çıkış: TP1 ~%64-65, kazanma ~%67-69.
 # ------------------------------------------------------------------
 EXIT_STOP_ATR = 3.0                 # zarar kes: giriş − 3.0×ATR
-EXIT_TP1_ATR = 1.5                  # TP1: giriş + 1.5×ATR -> yarısı satılır, stop girişe çekilir
-EXIT_TP1_FRAC = 0.5
-EXIT_TP2_ATR = 2.0                  # TP2: giriş + 2×ATR (TP1'i geçenlerin ~%54-58'i ulaşıyor)
+EXIT_TP1_ATR = 1.0                  # TP1: giriş + 1.0×ATR -> TAMAMI satılır (v3.2)
+EXIT_TP1_FRAC = 1.0                 # TP2 yapısı gerçek veride neti düşürdüğü için kaldırıldı
+EXIT_TP2_ATR = None                 # TP2 yok (TP2'li varyant: BIST net +0.11, S&P −0.02 vs tam çıkış +0.13 / +0.20)
 ROLLING_TRAIN_DAYS = 375            # güçlü yeniden eğitimde denenecek yakın dönem penceresi (etiketli gün)
 HEALTH_CLOSE_HOUR = 17                # yerel saat (workflow TZ); bu saatten sonra bugünün barı beklenir

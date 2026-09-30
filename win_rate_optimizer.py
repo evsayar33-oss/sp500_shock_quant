@@ -46,7 +46,10 @@ tarih = "tarih"
 MIN_TOTAL_SAMPLES = 200
 MIN_TRAIN_SAMPLES = 80
 MIN_TEST_SAMPLES = 40
-EMBARGO_DAYS = 6
+try:
+    EMBARGO_DAYS = int(getattr(_C, "HORIZON", 5)) + 1   # etiket ufku + 1 gün
+except Exception:
+    EMBARGO_DAYS = 11
 MIN_TEST_WIN_LIFT = 0.02          # +2.0 percentage points
 MIN_LCB_LIFT = 0.015              # +1.5 percentage points
 MIN_PF_RATIO = 0.90               # PF cannot fall >10% vs active

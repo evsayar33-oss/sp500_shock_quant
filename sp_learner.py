@@ -389,7 +389,10 @@ def promotion_decision(active_m: dict, cand_m: dict) -> tuple[bool, str]:
         return False, f"OOS örneklem yetersiz (n={cand_m['n']})"
     lcb_lift = cand_m["wilson_lcb"] - active_m["wilson_lcb"]
     avg_lift = cand_m["avg_return"] - active_m["avg_return"]
-    if cand_m["avg_return"] <= 0 or cand_m["profit_factor"] < 1.05:
+    active_broken0 = active_m["n"] >= C.PROMOTION_MIN_OOS_TRADES and (active_m["avg_return"] <= 0 or active_m["profit_factor"] < 1.0)
+    # Mutlak taban: net > 0 ve PF >= 1.05; aktif model zarar ediyorsa taban net > 0 ve PF > 1.0
+    floor_fail = (cand_m["profit_factor"] <= 1.0) if active_broken0 else (cand_m["profit_factor"] < 1.05)
+    if cand_m["avg_return"] <= 0 or floor_fail:
         return False, f"Aday mutlak tabanı geçemedi (ort {cand_m['avg_return']:+.2f}, PF {cand_m['profit_factor']:.2f})"
     if active_m["n"] >= C.PROMOTION_MIN_OOS_TRADES and cand_m["profit_factor"] < 0.95 * active_m["profit_factor"]:
         return False, f"PF bozulması ({cand_m['profit_factor']:.2f} vs {active_m['profit_factor']:.2f})"
