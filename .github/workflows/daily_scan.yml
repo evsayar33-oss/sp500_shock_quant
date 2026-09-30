@@ -1,0 +1,58 @@
+name: SP500 v2 NY Kapanis Taramasi + Ogrenme
+
+on:
+  schedule:
+    # Hafta ici UTC 21:30 = NY 17:30 (yaz) / 16:30 (kis). NY seansi 16:00'da kapanir; iki saat diliminde de kapanis sonrasi.
+    - cron: '30 21 * * 1-5'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sp500-v2-pipeline
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Paketleri Yukle
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Kapanis Taramasi (panel + skor + portfoy + defter)
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+          TZ: America/New_York
+        run: python main.py
+
+      - name: Ogrenme Denetimi (walk-forward + terfi/rollback)
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+          TZ: America/New_York
+        run: python sp_auditor.py
+
+      - name: Kaydet
+        run: |
+          git config --global user.name "QuantBot-SP500"
+          git config --global user.email "bot@sp500.local"
+          git add -A
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "🗽 SP500 v2 kapanis taramasi + ogrenme"
+          for i in 1 2 3; do
+            git pull --rebase -X theirs && git push && exit 0
+            sleep 5
+          done
+          exit 1

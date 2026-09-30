@@ -1,0 +1,6 @@
+Verification results
+====================
+Python compile: PASS for all 4 projects.
+Synthetic optimizer smoke test: PASS for all 4 projects.
+Optimizer uses bounded threshold neighborhood + chronological walk-forward + Wilson lower bound.
+No learned CSV/JSON state is bundled; live state files are preserved.
