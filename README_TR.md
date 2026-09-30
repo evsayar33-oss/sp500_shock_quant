@@ -97,3 +97,59 @@ Ek olarak:
 **Panel (`app.py`):** Sade kart tasarımı ve 🔍 **hisse arama çubuğu**. Seçilen hisse için durum (SİNYAL / İZLEMEDE / UYGUN DEĞİL), skor ve eşik, kazanma olasılığı, grup, 6 bileşenin dökümü, 6 aylık fiyat grafiği ve **"neden sinyal değil"** açıklaması gösterilir. Sekmeler: Sinyaller · Para akışı · Pozisyonlar · Performans · Defter.
 
 **Telegram (`report.py`):** Her iki mesaj yeniden tasarlandı. Günlük sinyal mesajı önce kararı verir; her sinyal üç satırdır (fiyat · skor ve olasılık · ağırlık ve stop · grup). Denetim mesajında aktif ve aday model hizalı bir tabloda karşılaştırılır.
+
+
+## v3: Otomatik stop ve TP, canlı kâr/zarar takibi, sistem sağlığı, otomatik yeniden eğitim
+
+**Çıkış kuralı (`exits.py`) — backtest ve canlıda aynı**
+
+| | BIST | S&P 500 |
+|---|---|---|
+| Stop | giriş − 2×ATR | giriş − 3×ATR |
+| TP1 | giriş + 1.5×ATR → yarısı satılır, **stop girişe çekilir** | aynı |
+| TP2 | giriş + 2×ATR (TP1'i geçenlerin ~%55'i ulaşıyor) | aynı |
+| Süre | en geç 5. gün kapanışı | aynı |
+
+- Parametreler gerçek günlük yüksek/düşük verisiyle seçildi: işlemlerin ilk yarısında seçim, son yarısında sınama. Aynı gün hem stop hem hedef değdiyse stopun önce geldiği varsayıldı.
+- Vektörel backtest etiketi ve canlı pozisyon takibi, araştırma simülatörüyle %100 aynı sonucu veriyor (BIST 1.382, S&P 475 işlemde doğrulandı).
+- **Ödünleşim:** Bu kural kazanma oranını 3–5 puan yükseltir, ama büyük kazançları TP2'de kestiği için işlem başı neti düşürür. Denetim raporundaki "Aktif kural / Yalnız T+5" tablosu bu farkı her gün gösterir.
+
+**Canlı takip (`live_book.py`)**
+- v3 defter her taramada panelden kesin işlem günleriyle yeniden hesaplanır: giriş, seviyeler, TP1 / başabaş / TP2 / stop / süre olayları ve net getiri.
+- `data/live_trades.csv`: 5 günlük tablo, işlem başına G1–G5 getirisi.
+- `data/live_weekly.csv`: haftalık tablo (işlem, kazanma %, ortalama net, portföy katkısı, kümülatif).
+- `data/live_summary.json`: canlı sonucun backtest beklentisiyle karşılaştırması.
+- Panelde "💰 Canlı K/Z" sekmesi var. Telegram'da günün olayları ve canlı sonuç satırı, cuma günleri haftalık özet gösterilir.
+
+**Sistem sağlığı (`health.py`)**
+- Kontroller teşhiste görülen gerçek sorunlara göre seçildi:
+  - Veri: son bar gecikmesi, son gün kapsamı, son barın kaynağı (Yahoo / TradingView), geçersiz sıçramalar, makro güncelliği
+  - Kaynak ve model: kaynak erişimi, son yeniden eğitimin yaşı, otonomi modu
+  - Canlı: kazanma oranının backtestten sapması (binom z), olasılık kalibrasyonu
+  - Çalışma: workflow'ların son çalışma zamanı
+- 0–100 puan. Telegram'da tek satır (sorun varsa ilk 3 madde), panelde "🩺 Sağlık" sekmesi.
+
+**Otomatik yeniden eğitim**
+- Model her gün en güncel canlı veriyle yeniden denetlenir.
+- Güçlü yeniden eğitim şu durumlarda tetiklenir:
+  - Canlı son 20 işlem backtest beklentisinin belirgin altına düşerse
+  - Rejim 3 tarama boyunca kalıcı olarak değişirse
+  - Özellik dağılımında kayma görülürse
+  - Haftalık yenilemede ve sıfırlamada
+- Güçlü eğitimde tam geçmişle öğrenen adaya ek olarak **yakın dönem (375 gün) adayı** da denenir; OOS'ta daha iyi olan seçilir. Geçmişi panelde görünür.
+
+**Kural düzeltmeleri**
+- Aktif model zarar ediyorsa (net ≤ 0 ya da PF < 1), her iki ölçüde daha iyi olan aday güven eşiğini beklemeden devreye alınır.
+- Olasılık filtresi günlük t yerine **dilim tutarlılığıyla** açılır: filtre, dilimlerin en az %60'ında aktif modeli net getiride geçmeli.
+- BIST'te geçersiz bar eşiği %25'ten %10.5'e indi (fiyat marjı ±%10).
+- S&P taraması bir saat ileri alındı (UTC 22:30). Son gün kapsamı düşükse eksik barlar bir kez daha indirilir.
+
+**Sıfırlama (`reset_v3.py` + "v3 Sifirlama ve Yeni Backtest" workflow'u, tek seferlik)**
+- Eski defteri, sinyal kaydını, backtest raporunu ve öğrenilmiş profilleri siler; hepsi git geçmişinde kalır.
+- Hemen ardından yeni çıkış kuralıyla sıfırdan backtest üretir.
+- Fiyat paneli ve altyapı korunur.
+- Çalıştırırken onay kutusuna **SIFIRLA** yazılmalıdır.
+
+**v3 sıfırlama provası (gerçek veri)**
+- BIST: yeni model kendiliğinden devreye alındı → kazanma %53.6, net +%0.20, PF 1.08 (sıfırlanan şablon: %51.5 / −%0.66).
+- S&P: olasılık filtresi açıldı → kazanma %58.2, net +%0.74, PF 1.41 (filtresiz: %53.7 / +%0.14).

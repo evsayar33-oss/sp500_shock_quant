@@ -19,6 +19,7 @@ import numpy as np
 import pandas as pd
 
 import config as C
+import health
 import report
 from autonomy_guard import evaluate_autonomy_guard
 from price_history import load_earnings, load_macro, load_panel
@@ -26,7 +27,7 @@ from features import attach_regime, build_features
 from meta_label import fit_meta
 from regime import compute_macro_frame
 from sp_engine import score_frame
-from sp_learner import (active_profiles, ensure_meta_state, exit_variants, learn_profiles, live_rollback_needed,
+from sp_learner import (_objective, active_profiles, ensure_meta_state, exit_compare, learn_profiles, live_rollback_needed,
                            load_ai_state, load_signal_history, meta_decision, promotion_decision, save_ai_state,
                            trade_metrics, walk_forward)
 from win_rate_optimizer import optimize_win_rate, summary as winrate_summary
@@ -64,6 +65,22 @@ def run_audit():
     wf = walk_forward(research, active, offset=offset)
     ctx = {"day": t0, "days": int(research["tarih"].nunique()), "tickers": int(research["ticker"].nunique()),
            "ok": bool(wf.get("ok")), "offset": offset}
+
+    # Güçlü yeniden eğitim: canlı tetikleyici (health.retrain_triggers), sıfırlama ya da haftalık tam yenileme
+    rt = state.setdefault("retrain", {"pending": False, "reasons": [], "history": []})
+    strong = bool(rt.get("pending")) or os.environ.get("FULL_RETRAIN") == "1"
+    train_mode, window = "Tam geçmiş", None
+    if strong and wf.get("ok"):
+        window = int(getattr(C, "ROLLING_TRAIN_DAYS", 375))
+        wf_r = walk_forward(research, active, offset=offset, window=window)
+        if wf_r.get("ok") and _objective(wf_r["candidate"]) > _objective(wf["candidate"]):
+            for k in ("candidate", "candidate_trades", "pool", "folds", "ic"):
+                wf[k] = wf_r[k]
+            train_mode = f"Yakın dönem ({window} gün)"
+        else:
+            window = None
+    ctx["retrain"] = {"strong": strong, "mode": train_mode,
+                      "reasons": rt.get("reasons", []) or (["HAFTALIK"] if os.environ.get("FULL_RETRAIN") == "1" else [])}
     decision, note, status = False, "", "KEPT"
 
     if not wf.get("ok"):
@@ -71,7 +88,11 @@ def run_audit():
         ctx["note"] = note
     else:
         decision, note = promotion_decision(wf["active"], wf["candidate"])
-        final = learn_profiles(research)  # tüm etiketli veriyle nihai aday
+        lab = research[research["net_ret"].notna()]
+        if window:
+            keep_days = sorted(lab["tarih"].unique())[-window:]
+            lab = lab[lab["tarih"].isin(keep_days)]
+        final = learn_profiles(lab)  # nihai aday: seçilen eğitim modu ile tüm uygun etiketli veri
         if decision:
             meta["stable_profiles"] = {r: _slim(p) for r, p in active.items()}
             meta["regime_profiles"] = {r: {**_slim(p), "promoted_at": t0.isoformat(timespec="seconds")} for r, p in final.items()}
@@ -86,7 +107,7 @@ def run_audit():
         # Meta-etiket kararı (OOS kanıt) + canlı profil ile nihai model
         # Meta, aktif skorlama üzerinde doğrulandı; bugün yeni profil terfi ettiyse bir sonraki denetimde
         # yeni aktif üzerinde yeniden doğrulanana kadar kapalı tutulur.
-        meta_on, meta_note = meta_decision(wf["active"], wf["meta"])
+        meta_on, meta_note = meta_decision(wf["active"], wf["meta"], wf["folds"])
         if decision and meta_on:
             meta_on, meta_note = False, "Yeni model terfi etti; olasılık filtresi bir sonraki denetimde yeniden doğrulanacak"
         model = None
@@ -103,13 +124,16 @@ def run_audit():
         meta["winrate_optimizer_status"] = winrate_summary(state)
 
         live_trades = wf["meta_trades"] if meta_on else (wf["candidate_trades"] if decision else wf["active_trades"])
-        exits = exit_variants(live_trades, panel)
+        exits = exit_compare(live_trades)
         live_sc = wf["meta"] if meta_on else (wf["candidate"] if decision else wf["active"])
         state["backtest_summary"] = live_sc
         rep = {"generated": t0.isoformat(timespec="seconds"), "days": wf["days"], "horizon": C.HORIZON,
                "candidate_oos": wf["candidate"], "active_oos": wf["active"], "template_oos": wf["template"],
                "meta_oos": wf["meta"], "meta_enabled": bool(meta_on), "meta_note": meta_note,
-               "exit_variants": exits, "ic_oos": wf["ic"], "folds": wf["folds"], "decision": note, "promoted": decision}
+               "exit_variants": {k: v for k, v in exits.items() if not k.startswith("_")}, "exit_rates": exits.get("_rates", {}),
+               "exit_rule": {k: getattr(C, k, None) for k in ("EXIT_STOP_ATR", "EXIT_TP1_ATR", "EXIT_TP1_FRAC", "EXIT_TP2_ATR")},
+               "train_mode": train_mode, "retrain_reasons": ctx["retrain"]["reasons"],
+               "ic_oos": wf["ic"], "folds": wf["folds"], "decision": note, "promoted": decision}
         os.makedirs(C.DATA_DIR, exist_ok=True)
         with open(C.BACKTEST_REPORT_FILE, "w", encoding="utf-8") as f:
             json.dump(rep, f, indent=2, ensure_ascii=False, default=str)
@@ -145,7 +169,14 @@ def run_audit():
                                 project=PROJECT_KEY, stress_test_due=False)
 
     meta["last_decision"] = {"promoted": decision, "rollback": status == "ROLLBACK", "note": note,
-                             "timestamp": t0.isoformat(timespec="seconds")}
+                             "timestamp": t0.isoformat(timespec="seconds"), "train_mode": train_mode}
+    if strong:
+        rt["history"] = (rt.get("history", []) + [{"ts": t0.isoformat(timespec="seconds"), "done": train_mode,
+                                                    "reasons": ctx["retrain"]["reasons"], "promoted": decision}])[-30:]
+        rt["pending"], rt["reasons"] = False, []
+    health.heartbeat(state, "audit")
+    if os.environ.get("FULL_RETRAIN") == "1":
+        health.heartbeat(state, "weekly")
     save_ai_state(state)
 
     ctx.update({"status": status, "note": note, "guard": g.get("mode"), "live": live_m,

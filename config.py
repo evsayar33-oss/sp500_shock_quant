@@ -112,7 +112,7 @@ MAX_PER_SECTOR = 3
 
 # Çıkış motoru. Test edilen strateji = T+HORIZON kapanışta ZAMAN çıkışıdır (etiketle birebir).
 # ATR felaket stopu yalnızca kuyruk riskine karşı koruma; normal işleyişte nadiren tetiklenir.
-STOP_ATR = 2.5
+STOP_ATR = 3.0                      # = EXIT_STOP_ATR (geriye uyum)
 TP1_ATR = 2.0          # bilgi amaçlı hedef seviye (kısmi kâr opsiyonel, modelin parçası değil)
 
 REGIMES = ("CRASH", "STRESS", "ROTATION", "EXPANSION", "QUIET", "NORMAL")
@@ -148,4 +148,15 @@ CCY = "$"
 CLOSE_TEXT = "NY kapanış"
 PROMOTION_MIN_T = 1.0               # aday OOS kohort t-istatistiği en az bu olmalı (şansa bağlı terfiyi önler)
 HISTORY_MODULE = "price_history"            # panelin fiyat grafiği için
-META_MIN_T = 0.5                    # olasılık filtresinin devreye girmesi için en düşük OOS t
+META_MIN_T = 0.0                    # olasılık filtresi: yön şartı (asıl kanıt: LCB + dilim tutarlılığı)
+META_MIN_FOLD_SHARE = 0.6           # filtre, dilimlerin en az %60ında aktif modeli net getiride geçmeli
+
+# ------------------------------------------------------------------
+# v3 çıkış kuralı (gerçek veride seçildi: ilk yarıda seçim, son yarıda sınama; kullanıcı onayı "Dengeli")
+# ------------------------------------------------------------------
+EXIT_STOP_ATR = 3.0                 # zarar kes: giriş − 3.0×ATR
+EXIT_TP1_ATR = 1.5                  # TP1: giriş + 1.5×ATR -> yarısı satılır, stop girişe çekilir
+EXIT_TP1_FRAC = 0.5
+EXIT_TP2_ATR = 2.0                  # TP2: giriş + 2×ATR (TP1'i geçenlerin ~%54-58'i ulaşıyor)
+ROLLING_TRAIN_DAYS = 375            # güçlü yeniden eğitimde denenecek yakın dönem penceresi (etiketli gün)
+HEALTH_CLOSE_HOUR = 17                # yerel saat (workflow TZ); bu saatten sonra bugünün barı beklenir

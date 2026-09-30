@@ -293,7 +293,7 @@ def _learn_profiles_gate(train: pd.DataFrame, gate: str) -> dict:
 # ------------------------------------------------------------------
 # Walk-forward
 # ------------------------------------------------------------------
-def walk_forward(research: pd.DataFrame, active: dict, offset: float = 0.0) -> dict:
+def walk_forward(research: pd.DataFrame, active: dict, offset: float = 0.0, window: int | None = None) -> dict:
     """Genişleyen pencere, embargo'lu walk-forward. Aday ÖĞRENME PROSEDÜRÜ ile aktif profili
     aynı test dilimlerinde karşılaştırır."""
     lab = research[research["net_ret"].notna()]
@@ -307,6 +307,8 @@ def walk_forward(research: pd.DataFrame, active: dict, offset: float = 0.0) -> d
     while start < len(dates):
         test_dates = dates[start:start + C.WF_TEST_DAYS]
         train_dates = dates[:start - C.WF_EMBARGO_DAYS]
+        if window:  # yakın dönem adayı: yalnızca son `window` etiketli günle öğren
+            train_dates = train_dates[-int(window):]
         train = lab[lab["tarih"].isin(train_dates)]
         test = research[research["tarih"].isin(test_dates)]
         cand = learn_profiles(train)
@@ -350,17 +352,25 @@ def walk_forward(research: pd.DataFrame, active: dict, offset: float = 0.0) -> d
 
 
 PROMOTION_MIN_T = getattr(C, "PROMOTION_MIN_T", 1.0)
-META_MIN_T = getattr(C, "META_MIN_T", 0.5)   # meta filtre işlemleri az güne yoğunlaşır; win-rate kazancı ayrıca LCB ile test edilir
+META_MIN_T = getattr(C, "META_MIN_T", 0.0)   # yön şartı (t>0); asıl kanıt LCB + dilim tutarlılığı
+META_MIN_FOLD_SHARE = getattr(C, "META_MIN_FOLD_SHARE", 0.6)
 
 
-def meta_decision(base_m: dict, meta_m: dict) -> tuple[bool, str]:
-    """Meta-etiket yalnızca OOS'ta win-rate LCB'yi yükseltir ve net getiriyi bozmazsa açılır."""
+def meta_decision(base_m: dict, meta_m: dict, folds: list | None = None) -> tuple[bool, str]:
+    """Meta-etiket yalnızca OOS'ta win-rate LCB'yi yükseltir, net getiriyi ve PF'yi bozmaz ve bunu
+    dilimlerin çoğunda TUTARLI biçimde yaparsa açılır. (Günlük kohort t'si, filtre işlemleri az güne
+    yoğunlaştığı için bu karar için zayıf bir ölçüttür; dilim tutarlılığı daha anlamlıdır.)"""
     if meta_m["n"] < C.PROMOTION_MIN_OOS_TRADES:
         return False, f"meta OOS örneklem yetersiz (n={meta_m['n']})"
     lcb = meta_m["wilson_lcb"] - base_m["wilson_lcb"]
     avg = meta_m["avg_return"] - base_m["avg_return"]
-    ok = lcb >= 0.5 and avg >= -0.05 and meta_m["profit_factor"] >= base_m["profit_factor"] and meta_m["cohort_t"] >= META_MIN_T
-    return bool(ok), f"meta LCB {lcb:+.2f}pp | net {avg:+.2f} | PF {meta_m['profit_factor']:.2f} vs {base_m['profit_factor']:.2f} | t={meta_m['cohort_t']:.2f}"
+    fl = [f for f in (folds or []) if (f.get("meta") or {}).get("n", 0) >= 10 and (f.get("active") or {}).get("n", 0) >= 10]
+    wins = sum(1 for f in fl if f["meta"]["avg_return"] > f["active"]["avg_return"])
+    share = wins / len(fl) if fl else 0.0
+    ok = (lcb >= 0.5 and avg >= -0.05 and meta_m["profit_factor"] >= base_m["profit_factor"]
+          and meta_m["cohort_t"] >= META_MIN_T and share >= META_MIN_FOLD_SHARE)
+    return bool(ok), (f"meta LCB {lcb:+.2f}pp | net {avg:+.2f} | PF {meta_m['profit_factor']:.2f} vs {base_m['profit_factor']:.2f}"
+                      f" | dilim tutarlılığı {wins}/{len(fl)} | t={meta_m['cohort_t']:.2f}")
 
 
 def promotion_decision(active_m: dict, cand_m: dict) -> tuple[bool, str]:
@@ -375,6 +385,11 @@ def promotion_decision(active_m: dict, cand_m: dict) -> tuple[bool, str]:
     improve = (lcb_lift >= C.PROMOTION_MIN_LCB_LIFT and avg_lift >= -0.05) or \
               (avg_lift >= C.PROMOTION_MIN_AVG_LIFT and lcb_lift >= -1.0)
     note = f"LCB fark {lcb_lift:+.2f}pp | Net ort fark {avg_lift:+.2f} | t={cand_m['cohort_t']:.2f}"
+    active_broken = active_m["n"] >= C.PROMOTION_MIN_OOS_TRADES and (active_m["avg_return"] <= 0 or active_m["profit_factor"] < 1.0)
+    if active_broken and lcb_lift > 0 and avg_lift > 0 and cand_m["cohort_t"] > 0:
+        # Aktif model mutlak tabanın altında (zarar ediyor): tabanı geçen ve her iki ölçüde daha iyi aday
+        # güven eşiğini beklemeden terfi eder. Güven eşiği iyi modeli korumak içindir, kötü modelden kaçışı engellemez.
+        return True, "Aktif model zarar ediyor; daha iyi aday devreye alındı | " + note
     if cand_m["cohort_t"] < PROMOTION_MIN_T:
         return False, f"İstatistiksel güven yetersiz (t={cand_m['cohort_t']:.2f} < {PROMOTION_MIN_T}) | " + note
     if active_m["n"] < C.PROMOTION_MIN_OOS_TRADES:
@@ -383,11 +398,13 @@ def promotion_decision(active_m: dict, cand_m: dict) -> tuple[bool, str]:
 
 
 def live_rollback_needed(ledger: pd.DataFrame) -> tuple[bool, dict]:
-    if ledger is None or ledger.empty or "net_ret_5d" not in ledger.columns:
+    """v3 defterde kapanmış canlı işlemler (çıkış kuralıyla net) bozulursa stabil profile dönülür."""
+    if ledger is None or ledger.empty or "net_ret" not in ledger.columns:
         return False, {}
-    done = ledger[pd.to_numeric(ledger["net_ret_5d"], errors="coerce").notna()].copy()
+    lv = pd.to_numeric(ledger.get("label_version"), errors="coerce")
+    done = ledger[(lv == 3) & (ledger.get("status") == "CLOSED")].copy()
     done["tarih"] = pd.to_datetime(done.get("date"), errors="coerce")
-    done["net_ret"] = pd.to_numeric(done["net_ret_5d"], errors="coerce")
+    done["net_ret"] = pd.to_numeric(done["net_ret"], errors="coerce")
     done = done.sort_values("tarih").tail(C.LIVE_ROLLBACK_MIN_TRADES * 2)
     m = trade_metrics(done)
     if m["n"] < C.LIVE_ROLLBACK_MIN_TRADES:
@@ -517,41 +534,26 @@ def build_runtime_meta_profile(regime_snapshot, state=None):
 
 
 # ------------------------------------------------------------------
-# Çıkış stratejisi karşılaştırması (yalnızca rapor — canlı kural T+HORIZON zaman çıkışıdır)
+# Çıkış kuralı karşılaştırması (rapor): aktif kural (stop/TP1/TP2) vs yalnız T+H süre çıkışı
 # ------------------------------------------------------------------
-def exit_variants(trades: pd.DataFrame, panel: pd.DataFrame, ks=(1.0, 1.5, 2.0)) -> dict:
-    """OOS işlemler için kâr-al (k×ATR limit satış) + T+H zaman çıkışı alternatiflerini ölçer.
-    Gün içi sıra: açılış hedefin üzerindeyse açılıştan, değilse gün içi yüksek hedefe değerse hedeften."""
-    out = {f"T+{C.HORIZON} zaman": trade_metrics(trades)}
-    if trades is None or trades.empty or panel is None or panel.empty:
-        return out
-    cal = pd.DatetimeIndex(sorted(pd.to_datetime(panel["tarih"].unique())))
-    px = panel.set_index(["tarih", "ticker"])[["open", "high", "close"]]
-    base = trades.dropna(subset=["net_ret"])[["tarih", "ticker", "close", "atr", "cost_rt", "net_ret"]].copy()
-    for k in ks:
-        rets = []
-        for r in base.itertuples(index=False):
-            pos = int(cal.searchsorted(pd.Timestamp(r.tarih), side="right"))
-            if pos + C.HORIZON - 1 >= len(cal) or (cal[pos], r.ticker) not in px.index:
-                rets.append(np.nan)
-                continue
-            entry = float(px.loc[(cal[pos], r.ticker), "open"])
-            tp = entry * (1.0 + k * _safe_float(r.atr) / max(_safe_float(r.close, 1.0), 1e-9))
-            fill = None
-            for j in range(C.HORIZON):
-                key = (cal[pos + j], r.ticker)
-                if key not in px.index:
-                    break
-                o_, h_ = px.loc[key, "open"], px.loc[key, "high"]
-                if j > 0 and o_ >= tp:
-                    fill = o_
-                    break
-                if h_ >= tp:
-                    fill = tp
-                    break
-            if fill is None:
-                key = (cal[pos + C.HORIZON - 1], r.ticker)
-                fill = px.loc[key, "close"] if key in px.index else np.nan
-            rets.append((fill / entry - 1.0) * 100.0 - r.cost_rt)
-        out[f"TP {k:g}×ATR"] = trade_metrics(base.assign(net_ret=rets))
+def exit_compare(trades: pd.DataFrame) -> dict:
+    if trades is None or trades.empty:
+        return {}
+    out = {"Aktif kural": trade_metrics(trades)}
+    if "net_ret_time" in trades.columns:
+        out[f"Yalnız T+{C.HORIZON}"] = trade_metrics(trades.assign(net_ret=trades["net_ret_time"]))
+    rates = {}
+    for k, col in (("tp1", "tp1_hit"), ("tp2_given_tp1", "tp2_hit"), ("stop", "stop_hit")):
+        if col in trades.columns:
+            v = pd.to_numeric(trades[col], errors="coerce")
+            if k == "tp2_given_tp1":
+                base = pd.to_numeric(trades["tp1_hit"], errors="coerce")
+                rates[k] = round(float(v.sum() / max(base.sum(), 1) * 100), 1)
+            else:
+                rates[k] = round(float(v.mean() * 100), 1)
+    out["_rates"] = rates
     return out
+
+
+def exit_variants(trades, panel=None, ks=None):  # geriye uyum
+    return exit_compare(trades)

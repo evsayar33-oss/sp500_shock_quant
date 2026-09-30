@@ -21,7 +21,11 @@ import pandas as pd
 import requests
 
 import config as C
+import exits
+import health
+import live_book as LB
 import report
+import price_history as HIST
 from autonomy_guard import evaluate_autonomy_guard
 from price_history import (append_live_bar, load_earnings, load_members, load_sectors, merge_universe,
                            refresh_constituents, update_earnings, update_incremental, update_macro)
@@ -118,108 +122,40 @@ def check_earnings_risk(ticker):
 # Defter (ledger) v2
 # ------------------------------------------------------------------
 def load_ledger():
-    if not os.path.exists(C.LEDGER_FILE):
-        return pd.DataFrame()
-    try:
-        return pd.read_csv(C.LEDGER_FILE)
-    except Exception:
-        return pd.DataFrame()
+    """v3 defter (live_book). Denetçi ve geriye uyum için."""
+    return LB.load_ledger()
 
 
-def update_ledger_from_panel(ledger, panel):
-    if ledger.empty:
-        return ledger
-    for c in ("label_version", "entry_date", "entry_price", "cost_rt", "net_ret_5d", "exit_date",
-              "price_d1", "price_d3", "price_d5", "return_d1", "return_d3", "return_d5", "is_completed"):
-        if c not in ledger.columns:
-            ledger[c] = np.nan
-    ledger["is_completed"] = pd.to_numeric(ledger["is_completed"], errors="coerce").fillna(0).astype(int)
-    for c in ("entry_date", "exit_date", "date"):
-        ledger[c] = ledger[c].astype(object)
-    todo = ledger[(pd.to_numeric(ledger["label_version"], errors="coerce") == 2) & (ledger["is_completed"] == 0)]
-    labels = _label_rows(todo, "date", "ticker", panel, liq_col="liq20")
-    for idx, lab in labels.items():
-        if "entry_price" not in lab:
-            continue
-        ledger.at[idx, "entry_date"] = lab["entry_date"]
-        ledger.at[idx, "entry_price"] = lab["entry_price"]
-        ledger.at[idx, "cost_rt"] = lab["cost_rt"]
-        for k in (1, 3, C.HORIZON):
-            if f"close_d{k}" in lab:
-                ledger.at[idx, f"price_d{k}"] = lab[f"close_d{k}"]
-                ledger.at[idx, f"return_d{k}"] = lab[f"gross_d{k}"]
-        if f"gross_d{C.HORIZON}" in lab:
-            ledger.at[idx, "net_ret_5d"] = round(lab[f"gross_d{C.HORIZON}"] - lab["cost_rt"], 3)
-            ledger.at[idx, "exit_date"] = lab.get("exit_date")
-            ledger.at[idx, "is_completed"] = 1
-    return ledger
+def retry_missing_last_bar(panel, wait_sec=90):
+    """Teşhis bulgusu: kapanış sonrası ilk dakikalarda Yahoo bazı hisselerin son barını henüz yayınlamıyor.
+    Son gün kapsamı düşükse bekleyip yalnızca eksik hisseleri yeniden indirir (tek deneme)."""
+    import time
+    if panel is None or panel.empty:
+        return panel, 0
+    last = panel["tarih"].max()
+    per_day = panel.groupby("tarih").size()
+    med = per_day.tail(21).iloc[:-1].median() if len(per_day) > 2 else per_day.iloc[-1]
+    if per_day.iloc[-1] >= 0.95 * med:
+        return panel, 0
+    recent = set(panel.loc[panel["tarih"] >= last - pd.Timedelta(days=10), "ticker"])
+    missing = sorted(recent - set(panel.loc[panel["tarih"] == last, "ticker"]))
+    if not missing:
+        return panel, 0
+    print(f"⏳ Son gün kapsamı düşük ({per_day.iloc[-1]}/{med:.0f}); {len(missing)} hisse {wait_sec} sn sonra yeniden denenecek")
+    time.sleep(wait_sec)
+    fresh = HIST.download_ohlcv(missing, period="5d")
+    fresh = fresh[fresh["tarih"] == last] if not fresh.empty else fresh
+    if fresh.empty:
+        return panel, 0
+    out = pd.concat([panel, fresh], ignore_index=True).drop_duplicates(["tarih", "ticker"], keep="last")
+    out = out.sort_values(["tarih", "ticker"]).reset_index(drop=True)
+    HIST.save_panel(out, months={pd.Timestamp(last).strftime("%Y_%m")})
+    print(f"✅ {len(fresh)} eksik bar tamamlandı")
+    return out, int(len(fresh))
 
 
-def record_ledger_entries(ledger, portfolio_df, day):
-    day_str = pd.Timestamp(day).strftime("%Y-%m-%d")
-    if not ledger.empty and "date" in ledger.columns:
-        lv = pd.to_numeric(ledger.get("label_version"), errors="coerce")
-        ledger = ledger[~((ledger["date"].astype(str) == day_str) & (lv == 2))]  # aynı gün yeniden çalıştırma
-    if portfolio_df is None or portfolio_df.empty:
-        return ledger
-    picks = portfolio_df[portfolio_df["weight_pct"] > 0]
-    if picks.empty:
-        return ledger
-    rows = []
-    for _, r in picks.iterrows():
-        rows.append({
-            "date": day_str, "ticker": r["ticker"], "label_version": 2, "signal_close": r["close"],
-            "entry_date": np.nan, "entry_price": np.nan, "weight_pct": r["weight_pct"], "atr": r.get("atr"),
-            "stop_atr_mult": C.STOP_ATR, "initial_score": r["shock_score"],
-            "effective_min_score": r["effective_min_score"], "regime": r.get("meta_regime"),
-            "regime_confidence": r.get("meta_regime_confidence"), "macro_label": r.get("macro_label"),
-            "macro_stress": r.get("macro_stress"), "liq20": r.get("liq20"), "volatility": r.get("volatility"),
-            "z_vol": r.get("z_vol"), "z_range": r.get("z_range"), "z_flow": r.get("z_flow"),
-            "z_lambda": r.get("z_lambda"), "cmf20": r.get("cmf20"), "resilience_score": r.get("resilience_score"),
-            "excess_return": r.get("excess_return"), "flow_score": r.get("flow_score"),
-            "event_score": r.get("event_score"), "activity_score": r.get("activity_score"),
-            "liquidity_score": r.get("liquidity_score"), "overnight_risk": r.get("overnight_risk"),
-            "grp": r.get("grp"), "sector_score": r.get("sector_score"), "sec_cmf": r.get("sec_cmf"),
-            "entry_status": r.get("entry_status"), "sector": r.get("sector"), "is_completed": 0,
-        })
-    new = pd.DataFrame(rows)
-    return pd.concat([ledger, new], ignore_index=True, sort=False)
-
-
-def exit_rows(ledger, panel):
-    """Açık/bekleyen pozisyonların durumu (rapor ve panel için yapısal liste)."""
-    rows = []
-    if ledger.empty or panel.empty:
-        return rows
-    lv = pd.to_numeric(ledger.get("label_version"), errors="coerce")
-    open_pos = ledger[(lv == 2) & (pd.to_numeric(ledger["is_completed"], errors="coerce").fillna(0) == 0)]
-    if open_pos.empty:
-        return rows
-    last_day = panel["tarih"].max()
-    today = panel[panel["tarih"] == last_day].set_index("ticker")
-    cal = pd.DatetimeIndex(sorted(panel["tarih"].unique()))
-    for _, r in open_pos.iterrows():
-        t = r["ticker"]
-        if pd.isna(r.get("entry_price")):
-            rows.append({"ticker": t, "status": "PENDING", "weight": r.get("weight_pct")})
-            continue
-        if t not in today.index:
-            continue
-        entry, cur, low = float(r["entry_price"]), float(today.at[t, "close"]), float(today.at[t, "low"])
-        atr = float(r.get("atr") or 0.0)
-        stop = entry - C.STOP_ATR * atr if atr > 0 else entry * 0.93
-        held = int(((cal >= pd.Timestamp(r["entry_date"])) & (cal <= last_day)).sum())
-        status = "STOP" if low <= stop else ("EXIT" if held >= C.HORIZON else "HOLD")
-        rows.append({"ticker": t, "status": status, "held": held, "pnl": (cur / entry - 1.0) * 100.0,
-                     "stop": stop, "weight": r.get("weight_pct")})
-    return rows
-
-
-# ------------------------------------------------------------------
-# Ana akış
-# ------------------------------------------------------------------
 def main():
-    print(f"[{datetime.now():%H:%M:%S}] === S&P 500 Adaptive Meta-Engine v2 ===")
+    print(f"[{datetime.now():%H:%M:%S}] === S&P 500 Meta-Engine v3 ===")
     live = fetch_live_snapshot()
     import os as _os
     import json as _json
@@ -235,7 +171,11 @@ def main():
         merge_universe([], sectors={t: s for t, s in zip(live["ticker"], live["sector"]) if t in members and s})
 
     panel = update_incremental()
-    macro_frame = compute_macro_frame(update_macro())
+    macro_raw = update_macro()
+    macro_frame = compute_macro_frame(macro_raw)
+    panel, n_retry = retry_missing_last_bar(panel)
+    yahoo_last = str(pd.Timestamp(panel["tarih"].max()).date()) if not panel.empty else None
+    n_before = len(panel)
     if panel.empty:
         send_telegram_message("⚠️ S&P 500 v2: geçmiş panel oluşturulamadı (yfinance erişimi). Tarama atlandı.")
         return
@@ -247,6 +187,7 @@ def main():
     earnings = load_earnings()
     if earnings.empty:
         earnings = update_earnings()
+    tv_appended = len(panel) - n_before
     dq, dq_text = data_quality(panel, not live.empty)
     print(f"Veri kalitesi {dq:.0f} | {dq_text}")
 
@@ -276,11 +217,9 @@ def main():
 
     # Etiketleri güncelle (performans kayması için)
     sig_hist = update_realized_shock_returns(panel)
-    perf = None
-    if not sig_hist.empty and "realized_5d" in sig_hist.columns:
-        v2 = sig_hist[(pd.to_numeric(sig_hist.get("label_version"), errors="coerce") == 2)
-                      & (sig_hist.get("model_variant") == "active")]
-        perf = pd.to_numeric(v2["realized_5d"], errors="coerce").dropna()
+    # Performans kayması: v3 defterde KAPANMIŞ canlı işlemlerin net getirisi (çıkış kuralı dahil)
+    _l3 = LB.v3_rows(LB.load_ledger())
+    perf = pd.to_numeric(_l3.loc[_l3["status"] == "CLOSED", "net_ret"], errors="coerce").dropna() if not _l3.empty else None
 
     scored = score_frame(today, profiles, threshold_offset=offset)
     guard = evaluate_autonomy_guard(state, features=scored, regime={"label": regime["label"]},
@@ -343,11 +282,25 @@ def main():
 
     log_shock_signals(scored.head(10), regime_snapshot=regime, shadow_df=shadow_df)
 
-    ledger = load_ledger()
-    ledger = update_ledger_from_panel(ledger, panel)
-    ledger = record_ledger_entries(ledger, port, day)
+    # v3 defter: açık pozisyonları panelden yeniden hesapla (TP1/başabaş/TP2/stop/süre), yeni sinyalleri ekle
+    ledger = LB.load_ledger()
+    ledger, events = LB.update_book(ledger, panel)
+    port_rec = port.copy() if not port.empty else port
+    if not port_rec.empty:
+        port_rec["grp_name"] = port_rec["grp"].map(lambda g: gnames.get(int(g)) if g == g and g is not None else None)
+    ledger = LB.record_signals(ledger, port_rec, day)
     ledger.to_csv(C.LEDGER_FILE, index=False)
-    positions = exit_rows(ledger, panel)
+    positions = LB.positions_view(ledger, panel)
+    live_summary = LB.build_tables(ledger, state.get("backtest_summary"))
+
+    # Otomatik yeniden eğitim tetikleyicileri + sistem sağlığı
+    health.retrain_triggers(state, regime["label"], guard, live_summary)
+    health.heartbeat(state, "scan")
+    hl = health.evaluate(state, panel, macro_raw, {
+        "live_rows": int(len(live)), "tv_appended": int(max(tv_appended, 0)), "yahoo_last": yahoo_last,
+        "yahoo_rows": int((panel["tarih"] == panel["tarih"].max()).sum()) - int(max(tv_appended, 0)),
+        "dq": dq, "guard_mode": guard.get("mode"), "live_summary": live_summary,
+        "calibration": health.calibration(LB.v3_rows(ledger)) if model else None})
 
     # app.py için günlük kesit geçmişi (120 gün)
     scored["grp_name"] = scored["grp"].map(lambda g: gnames.get(int(g)) if g == g and g is not None else None)
@@ -373,7 +326,8 @@ def main():
             g = r.get("grp")
             picks.append({"ticker": r["ticker"], "close": r["close"], "change": r.get("change_%"),
                           "score": r["shock_score"], "thr": r["effective_min_score"], "p_win": r.get("p_win"),
-                          "weight": r["weight_pct"], "stop": r["stop_price"], "sec_cmf": r.get("sec_cmf"),
+                          "weight": r["weight_pct"], "sec_cmf": r.get("sec_cmf"),
+                          **exits.levels(float(r["close"]), float(r["atr"]) / float(r["close"])),
                           "group": gnames.get(int(g)) if g == g and g is not None else None})
     watch = []
     if not picks:
@@ -384,7 +338,8 @@ def main():
     report.send(report.scan_message({
         "day": day, "regime": regime, "guard": guard, "exposure": exposure, "picks": picks, "watch": watch,
         "positions": positions, "board": board, "scorecard": state.get("backtest_summary"),
-        "meta_on": bool(model), "dq": dq}))
+        "meta_on": bool(model), "dq": dq, "events": events, "live": live_summary, "health": hl,
+        "week_end": pd.Timestamp(day).weekday() == 4}))
     print("Tarama tamamlandı.")
 
 

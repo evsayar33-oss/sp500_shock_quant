@@ -196,7 +196,7 @@ if q:
 # ------------------------------------------------------------------
 # Sekmeler
 # ------------------------------------------------------------------
-t1, t2, t3, t4, t5 = st.tabs(["🎯 Sinyaller", "🧭 Para akışı", "📂 Pozisyonlar", "📊 Performans", "📒 Defter"])
+t1, t6, t3, t2, t4, t7, t5 = st.tabs(["🎯 Sinyaller", "💰 Canlı K/Z", "📂 Pozisyonlar", "🧭 Para akışı", "📊 Backtest", "🩺 Sağlık", "📒 Defter"])
 
 with t1:
     if today.empty:
@@ -240,28 +240,101 @@ with t2:
                             unsafe_allow_html=True)
 
 with t3:
-    if ledger.empty or "label_version" not in ledger.columns:
+    lt = load_csv(os.path.join(C.DATA_DIR, "live_trades.csv"))
+    if lt.empty:
         st.info("Açık pozisyon yok.")
     else:
-        v2 = ledger[pd.to_numeric(ledger["label_version"], errors="coerce") == 2]
-        op = v2[pd.to_numeric(v2["is_completed"], errors="coerce").fillna(0) == 0].copy()
+        op = lt[lt["Durum"].isin(["Açılışta alınacak", "Açık", "TP1 ✓ (stop girişte)"])]
         if op.empty:
             st.success("Açık / bekleyen pozisyon yok.")
         else:
-            cur = dict(zip(today["ticker"], today["close"])) if not today.empty else {}
-            op["Güncel"] = op["ticker"].map(cur)
-            op["K/Z %"] = (pd.to_numeric(op["Güncel"], errors="coerce") / pd.to_numeric(op["entry_price"], errors="coerce") - 1) * 100
-            op["Durum"] = np.where(op["entry_price"].isna(), "Açılışta alınacak", "Taşınıyor")
-            view = op[["ticker", "date", "Durum", "entry_price", "Güncel", "K/Z %", "weight_pct"]].rename(
-                columns={"ticker": "Hisse", "date": "Sinyal", "entry_price": "Giriş", "weight_pct": "Ağırlık %"})
-            st.dataframe(view, hide_index=True, use_container_width=True,
-                         column_config={"K/Z %": st.column_config.NumberColumn(format="%+.2f")})
+            led = load_csv(C.LEDGER_FILE)
+            lv = led[pd.to_numeric(led.get("label_version"), errors="coerce") == 3] if not led.empty else led
+            lev = lv.set_index(["date", "ticker"])[["stop_price", "tp1_price", "tp2_price"]] if not lv.empty else None
+            rows = []
+            for _, r in op.iterrows():
+                k = (r["Sinyal"], r["Hisse"])
+                stp, tp1, tp2 = (lev.loc[k].tolist() if lev is not None and k in lev.index else [None, None, None])
+                rows.append({"Hisse": r["Hisse"], "Sinyal": r["Sinyal"], "Durum": r["Durum"], "Giriş": r["Giriş"],
+                             "K/Z %": r["Net %"], "Stop": stp, "TP1": tp1, "TP2": tp2, "Ağırlık %": r["Ağırlık %"]})
+            st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True,
+                         column_config={"K/Z %": st.column_config.NumberColumn(format="%+.2f"),
+                                        "Giriş": st.column_config.NumberColumn(format="%.2f"),
+                                        "Stop": st.column_config.NumberColumn(format="%.2f"),
+                                        "TP1": st.column_config.NumberColumn(format="%.2f"),
+                                        "TP2": st.column_config.NumberColumn(format="%.2f")})
+            st.caption("TP1'de pozisyonun yarısı satılır ve stop giriş fiyatına çekilir; kalan kısım TP2'de ya da en geç "
+                       f"{C.HORIZON}. gün kapanışında satılır.")
+
+with t6:
+    ls = load_json(os.path.join(C.DATA_DIR, "live_summary.json"))
+    lt = load_csv(os.path.join(C.DATA_DIR, "live_trades.csv"))
+    wk = load_csv(os.path.join(C.DATA_DIR, "live_weekly.csv"))
+    la, l20, bt = ls.get("all") or {}, ls.get("last20") or {}, ls.get("backtest") or {}
+    if not ls:
+        st.info("Canlı takip bir sonraki taramada başlayacak.")
+    else:
+        a, b, c, d = st.columns(4)
+        card(a, "Kapanan işlem", f"{la.get('n', 0)}", f"açık {ls.get('open', 0)} · bekleyen {ls.get('pending', 0)}")
+        card(b, "Canlı kazanma", f"%{num(la.get('win_rate')):.0f}" if la.get("n") else "—",
+             f"backtest beklentisi %{num(bt.get('win_rate')):.0f}")
+        card(c, "İşlem başı net", f"%{num(la.get('avg_return')):+.2f}" if la.get("n") else "—",
+             f"backtest %{num(bt.get('avg_return')):+.2f}")
+        card(d, "TP1 / Stop oranı", f"%{num(ls.get('tp1_rate')):.0f} / %{num(ls.get('stop_rate')):.0f}" if la.get("n") else "—",
+             f"son 20 kazanma %{num(l20.get('win_rate')):.0f}" if l20.get("n", 0) >= 20 else "son 20: veri birikiyor")
+        st.write("")
+        st.markdown(f"**5 günlük işlem tablosu** <span class='muted'>(G1–G{C.HORIZON}: girişe göre günlük kapanış getirisi, %; "
+                    f"canlı takip başlangıcı {ls.get('since', '-')})</span>", unsafe_allow_html=True)
+        if lt.empty:
+            st.info("Henüz sinyal yok.")
+        else:
+            gcols = [f"G{k}" for k in range(1, C.HORIZON + 1)]
+            st.dataframe(lt, hide_index=True, use_container_width=True,
+                         column_config={**{g: st.column_config.NumberColumn(format="%+.2f") for g in gcols},
+                                        "Net %": st.column_config.NumberColumn(format="%+.2f"),
+                                        "Giriş": st.column_config.NumberColumn(format="%.2f"),
+                                        "Olasılık": st.column_config.NumberColumn(format="%.2f")})
+        st.markdown("**Haftalık kazanç / zarar** <span class='muted'>(kapanış haftasına göre; portföy katkısı = Σ ağırlık × net)</span>",
+                    unsafe_allow_html=True)
+        if wk.empty:
+            st.info("İlk işlemler kapandığında haftalık tablo oluşacak.")
+        else:
+            st.dataframe(wk, hide_index=True, use_container_width=True,
+                         column_config={k: st.column_config.NumberColumn(format="%+.2f")
+                                        for k in ("Ort. net %", "Portföy katkısı %", "Kümülatif katkı %")})
+            st.markdown("**Kümülatif portföy katkısı (%)**")
+            st.line_chart(wk.set_index("Hafta")["Kümülatif katkı %"], height=220)
+
+with t7:
+    hl = load_json(os.path.join(C.DATA_DIR, "health.json"))
+    if not hl:
+        st.info("Sağlık raporu bir sonraki taramada oluşacak.")
+    else:
+        cls = {"ok": "ok", "warn": "warn", "bad": "bad"}[hl.get("status", "warn")]
+        st.markdown(f"### Sistem sağlığı <span class='pill {cls}'>{hl.get('score', 0)}/100</span>", unsafe_allow_html=True)
+        st.caption(f"Son kontrol: {hl.get('ts', '-')}")
+        items = pd.DataFrame(hl.get("items", []))
+        if not items.empty:
+            icon = {"ok": "🟢", "warn": "🟡", "bad": "🔴"}
+            for grp, part in items.groupby("group", sort=False):
+                st.markdown(f"**{grp}**")
+                for _, it in part.iterrows():
+                    st.markdown(f"{icon.get(it['level'], '')} **{it['name']}** — <span class='muted'>{it['detail']}</span>",
+                                unsafe_allow_html=True)
+        rt = state.get("retrain") or {}
+        if rt.get("history"):
+            with st.expander("Otomatik yeniden eğitim geçmişi"):
+                st.dataframe(pd.DataFrame(rt["history"]).iloc[::-1], hide_index=True, use_container_width=True)
 
 with t4:
     if not report:
         st.info("Performans raporu ilk denetimden sonra oluşur.")
     else:
         st.markdown(f"**Son karar:** {report.get('decision', '-')}")
+        er = report.get("exit_rule") or {}
+        if er:
+            st.caption(f"Çıkış kuralı: stop {er.get('EXIT_STOP_ATR')}×ATR · TP1 {er.get('EXIT_TP1_ATR')}×ATR (%{num(er.get('EXIT_TP1_FRAC')) * 100:.0f} sat, "
+                       f"stop girişe) · TP2 {er.get('EXIT_TP2_ATR')}×ATR · en geç {C.HORIZON}. gün · eğitim: {report.get('train_mode', '-')}")
         rows = {"Aktif model": report.get("active_oos", {}), "Aday model": report.get("candidate_oos", {}),
                 "Olasılık filtreli": report.get("meta_oos", {})}
         tbl = pd.DataFrame({k: {"Kazanma %": v.get("win_rate"), "Güven alt sınırı %": v.get("wilson_lcb"),
@@ -271,7 +344,7 @@ with t4:
         st.caption(f"Olasılık filtresi: {'AÇIK' if report.get('meta_enabled') else 'KAPALI'} — {report.get('meta_note', '')}")
         ex = report.get("exit_variants", {})
         if ex:
-            st.markdown("**Çıkış stratejisi karşılaştırması**")
+            st.markdown("**Çıkış kuralı: aktif kural vs yalnız süre çıkışı**")
             st.dataframe(pd.DataFrame({k: {"Kazanma %": v.get("win_rate"), "Net/işlem %": v.get("avg_return"),
                                            "Kâr faktörü": v.get("profit_factor")} for k, v in ex.items()}).T,
                          use_container_width=True)
@@ -294,11 +367,11 @@ with t5:
     if ledger.empty:
         st.info("Defter boş.")
     else:
-        if "net_ret_5d" in ledger.columns:
-            done = pd.to_numeric(ledger["net_ret_5d"], errors="coerce").dropna()
-            if len(done):
-                a, b, c = st.columns(3)
-                a.metric("Canlı işlem", len(done))
-                b.metric("Kazanma", f"%{(done > 0).mean() * 100:.0f}")
-                c.metric("Net/işlem", f"%{done.mean():+.2f}")
-        st.dataframe(ledger.sort_values("date", ascending=False), hide_index=True, use_container_width=True)
+        v3 = ledger[pd.to_numeric(ledger.get("label_version"), errors="coerce") == 3] if "label_version" in ledger.columns else ledger
+        done = pd.to_numeric(v3.loc[v3.get("status") == "CLOSED", "net_ret"], errors="coerce").dropna() if "status" in v3.columns else pd.Series(dtype=float)
+        if len(done):
+            a, b, c = st.columns(3)
+            a.metric("Kapanan işlem", len(done))
+            b.metric("Kazanma", f"%{(done > 0).mean() * 100:.0f}")
+            c.metric("Net/işlem", f"%{done.mean():+.2f}")
+        st.dataframe(v3.sort_values("date", ascending=False), hide_index=True, use_container_width=True)

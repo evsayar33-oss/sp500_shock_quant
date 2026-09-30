@@ -10,7 +10,8 @@ Tüm hesaplar (tarih x hisse) geniş matrisler üzerinde vektörel yapılır; bu
 * Akış (flow) ailesi dürüstçe adlandırılmıştır: OHLCV tabanlı birikim vekilidir
   (Chaikin Money Flow + mum baskısı). Emir defteri verisi DEĞİLDİR.
 * Overnight risk, hissenin gerçekleşmiş gece boşluğu (gap) volatilitesinden ölçülür.
-* Etiket = canlı işlemle birebir: sinyal T kapanış, giriş T+1 AÇILIŞ, çıkış T+H KAPANIŞ,
+* Etiket = canlı işlemle birebir: sinyal T kapanış, giriş T+1 AÇILIŞ, çıkış = exits.py kuralı
+  (stop / TP1 kısmi + stop girişe / TP2 / en geç T+H kapanış),
   likiditeye bağlı gidiş-dönüş maliyet düşülmüş NET getiri.
 * Bilanço karartması: [T, T+H] penceresinde bilanço açıklaması olan satırlar işlem dışıdır
   (canlıda planlanan, backtest'te gerçekleşmiş tarihlerle — aynı kural).
@@ -23,6 +24,7 @@ import pandas as pd
 import config as C
 from regime import classify_market_regime, combine_regime, macro_snapshot
 from sector_flow import add_sector_features
+from exits import wide_labels
 
 FAMILIES = ("event", "flow", "activity", "liquidity", "resilience", "sector")
 
@@ -125,10 +127,18 @@ def build_features(panel: pd.DataFrame, with_labels: bool = True, earnings: pd.D
         label_ok = (fut_bad == 0) & entry.notna() & exit_.notna() & (entry > 0)
         gross = (exit_ / entry - 1.0) * 100.0
         cost = pd.DataFrame(C.round_trip_cost_pct(liq20.fillna(C.MIN_LIQ_TL).values), index=liq20.index, columns=liq20.columns)
+        # v3: etiket = CANLI ÇIKIŞ KURALI (stop / TP1 kısmi + başabaş / TP2 / süre) — exits.py ile aynı
+        xl = wide_labels(o, h, l, c, (atr_incl / c))
         cols["entry_next_open"] = entry.where(label_ok)
-        cols["gross_ret"] = gross.where(label_ok)
+        cols["gross_ret"] = xl["gross"].where(label_ok)
         cols["cost_rt"] = cost
-        cols["net_ret"] = (gross - cost).where(label_ok)
+        cols["net_ret"] = (xl["gross"] - cost).where(label_ok)
+        cols["net_ret_time"] = (gross - cost).where(label_ok)        # eski T+H zaman çıkışı (karşılaştırma)
+        cols["exit_reason"] = xl["reason"].where(label_ok)
+        cols["exit_day"] = xl["exit_day"].where(label_ok)
+        cols["tp1_hit"] = xl["tp1"].astype(float).where(label_ok)
+        cols["tp2_hit"] = xl["tp2"].astype(float).where(label_ok)
+        cols["stop_hit"] = xl["stop"].astype(float).where(label_ok)
         cols["gap_next"] = ((entry / c - 1.0) * 100.0).where(label_ok)
 
     stacked = {k: w.stack() if hasattr(w, "stack") else w for k, w in cols.items()}
