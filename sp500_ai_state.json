@@ -13,12 +13,12 @@
     "watch_streak": 0,
     "safe_streak": 0,
     "recovery_streak": 0,
-    "healthy_streak": 16,
+    "healthy_streak": 17,
     "last_transition": "2026-09-30T00:45:51.644331+00:00",
-    "last_evaluation": "2026-09-30T09:56:53.457020+00:00",
+    "last_evaluation": "2026-09-30T10:06:22.436519+00:00",
     "reason": "HEALTHY",
     "recent_regimes": [
-      "STRESS",
+      "NORMAL",
       "NORMAL",
       "NORMAL",
       "NORMAL",
@@ -130,8 +130,8 @@
     "last_reason": "HEALTHY"
   },
   "heartbeat": {
-    "audit": "2026-09-30T05:56:53",
-    "weekly": "2026-09-30T05:53:30",
+    "audit": "2026-09-30T06:06:22",
+    "weekly": "2026-09-30T06:06:22",
     "scan": "2026-09-30T05:55:39"
   },
   "last_scan": {
@@ -612,7 +612,7 @@
           }
         }
       },
-      "created_at": "2026-09-30T05:55:40",
+      "created_at": "2026-09-30T06:03:29",
       "decision": "İstatistiksel güven yetersiz (t=0.88 < 1.0) | LCB fark +1.03pp | Net ort fark +0.12 | t=0.88"
     },
     "promotion_count": 0,
@@ -622,7 +622,7 @@
       "promoted": false,
       "rollback": false,
       "note": "İstatistiksel güven yetersiz (t=0.88 < 1.0) | LCB fark +1.03pp | Net ort fark +0.12 | t=0.88",
-      "timestamp": "2026-09-30T05:55:40",
+      "timestamp": "2026-09-30T06:03:29",
       "train_mode": "Tam geçmiş"
     }
   },
@@ -656,7 +656,7 @@
       "days": 410
     },
     "model": null,
-    "updated": "2026-09-30T05:55:40"
+    "updated": "2026-09-30T06:03:29"
   },
   "retrain": {
     "pending": false,
@@ -667,6 +667,14 @@
         "done": "Tam geçmiş",
         "reasons": [
           "SIFIRLAMA_V3"
+        ],
+        "promoted": false
+      },
+      {
+        "ts": "2026-09-30T06:03:29",
+        "done": "Tam geçmiş",
+        "reasons": [
+          "HAFTALIK"
         ],
         "promoted": false
       }
@@ -700,7 +708,7 @@
     "return_col": "realized_5d",
     "outcome_col": null,
     "baseline_threshold": 75.0,
-    "last_run": "2026-09-30T09:56:53.362648Z",
+    "last_run": "2026-09-30T10:06:22.331643Z",
     "walk_forward_folds": [
       {
         "train_start": "2024-10-16",

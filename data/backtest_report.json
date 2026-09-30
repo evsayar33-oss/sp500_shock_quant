@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-30T05:55:40",
+  "generated": "2026-09-30T06:03:29",
   "days": 740,
   "horizon": 10,
   "candidate_oos": {
@@ -96,7 +96,9 @@
     "EXIT_TP2_ATR": null
   },
   "train_mode": "Tam geçmiş",
-  "retrain_reasons": [],
+  "retrain_reasons": [
+    "HAFTALIK"
+  ],
   "ic_oos": {
     "event": {
       "ic": -0.0029,
