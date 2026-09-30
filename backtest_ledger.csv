@@ -1,1 +1,5 @@
 date,ticker,label_version,signal_close,weight_pct,atr_pct,initial_score,effective_min_score,p_win,regime,macro_label,grp,grp_name,liq20,cost_rt,entry_date,entry_price,stop_price,tp1_price,tp2_price,status,exit_reason,exit_date,days,tp1_hit,tp1_date,tp2_hit,stop_hit,mtm_ret,net_ret,d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,is_completed
+2026-09-29,AMGN,3,423.6400146484375,8.3,0.02237074404279088,84.1,75.9,,NORMAL,RISK_ON,6.0,"Health Care · LLY, JNJ, TMO",1085691425.289917,0.09641900213498573,,,,,,PENDING,,,,,,,,,,,,,,,,,,,,0
+2026-09-29,BE,3,291.25,4.1,0.07149382029333998,83.6,75.9,,NORMAL,RISK_ON,3.0,"Information Technology · MU, NVDA, SNDK",3787021069.4091797,0.07949990005214504,,,,,,PENDING,,,,,,,,,,,,,,,,,,,,0
+2026-09-29,AMAT,3,512.010009765625,6.8,0.03757599188193798,82.3,75.9,,NORMAL,RISK_ON,3.0,"Information Technology · MU, NVDA, SNDK",2738220083.1868286,0.08293227126238258,,,,,,PENDING,,,,,,,,,,,,,,,,,,,,0
+2026-09-29,META,3,738.7899780273438,6.0,0.04046482402497004,80.9,75.9,,NORMAL,RISK_ON,3.0,"Information Technology · MU, NVDA, SNDK",13473141154.3396,0.07033824490739607,,,,,,PENDING,,,,,,,,,,,,,,,,,,,,0

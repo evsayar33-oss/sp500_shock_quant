@@ -13,14 +13,14 @@
     "watch_streak": 0,
     "safe_streak": 0,
     "recovery_streak": 0,
-    "healthy_streak": 14,
+    "healthy_streak": 16,
     "last_transition": "2026-09-30T00:45:51.644331+00:00",
-    "last_evaluation": "2026-09-30T09:53:30.685344+00:00",
+    "last_evaluation": "2026-09-30T09:56:53.457020+00:00",
     "reason": "HEALTHY",
     "recent_regimes": [
       "STRESS",
-      "STRESS",
-      "STRESS",
+      "NORMAL",
+      "NORMAL",
       "NORMAL",
       "NORMAL",
       "NORMAL",
@@ -29,10 +29,92 @@
       "NORMAL",
       "NORMAL"
     ],
-    "feature_baseline": {},
+    "feature_baseline": {
+      "shock_score": {
+        "n": 503,
+        "mean": 17.005765,
+        "std": 26.847989,
+        "median": 0.0,
+        "q25": 0.0,
+        "q75": 46.7,
+        "mad": 0.0
+      },
+      "z_vol": {
+        "n": 503,
+        "mean": -0.037232,
+        "std": 0.982219,
+        "median": -0.128802,
+        "q25": -0.686782,
+        "q75": 0.436889,
+        "mad": 0.56414
+      },
+      "z_flow": {
+        "n": 503,
+        "mean": 0.171013,
+        "std": 0.922333,
+        "median": 0.122407,
+        "q25": -0.595883,
+        "q75": 0.899666,
+        "mad": 0.749678
+      },
+      "z_range": {
+        "n": 503,
+        "mean": -0.188545,
+        "std": 0.934788,
+        "median": -0.24035,
+        "q25": -0.789781,
+        "q75": 0.394325,
+        "mad": 0.590772
+      },
+      "z_lambda": {
+        "n": 503,
+        "mean": -0.44504,
+        "std": 0.720406,
+        "median": -0.580263,
+        "q25": -1.000509,
+        "q75": -0.032753,
+        "mad": 0.450902
+      },
+      "change_%": {
+        "n": 503,
+        "mean": -0.130755,
+        "std": 1.951795,
+        "median": -0.245702,
+        "q25": -0.876736,
+        "q75": 0.406132,
+        "mad": 0.642498
+      },
+      "rvol": {
+        "n": 503,
+        "mean": 0.957412,
+        "std": 0.55366,
+        "median": 0.879437,
+        "q25": 0.734392,
+        "q75": 1.050108,
+        "mad": 0.152939
+      },
+      "perf_1m": {
+        "n": 503,
+        "mean": -4.682974,
+        "std": 9.623991,
+        "median": -5.714291,
+        "q25": -9.794347,
+        "q75": -0.673755,
+        "mad": 4.365008
+      },
+      "perf_3m": {
+        "n": 503,
+        "mean": -0.766792,
+        "std": 18.525323,
+        "median": -3.294695,
+        "q25": -11.534488,
+        "q75": 7.22537,
+        "mad": 9.294969
+      }
+    },
     "stress_test": {
       "passed": true,
-      "timestamp": "2026-09-30T07:50:59.131104+00:00",
+      "timestamp": "2026-09-30T09:55:37.990374+00:00",
       "version": "1.0.0",
       "cases": 7,
       "passed_cases": 7
@@ -48,9 +130,9 @@
     "last_reason": "HEALTHY"
   },
   "heartbeat": {
-    "audit": "2026-09-30T05:53:30",
+    "audit": "2026-09-30T05:56:53",
     "weekly": "2026-09-30T05:53:30",
-    "scan": "2026-09-30T03:50:59"
+    "scan": "2026-09-30T05:55:39"
   },
   "last_scan": {
     "day": "2026-09-29",
@@ -80,10 +162,11 @@
     },
     "data_quality": 100.0,
     "threshold_offset": 0.0,
-    "n_candidates": 1,
-    "n_positions": 1
+    "n_candidates": 6,
+    "n_positions": 4
   },
   "regime_hist": [
+    "NORMAL",
     "NORMAL"
   ],
   "meta_engine": {
@@ -529,7 +612,7 @@
           }
         }
       },
-      "created_at": "2026-09-30T05:50:37",
+      "created_at": "2026-09-30T05:55:40",
       "decision": "İstatistiksel güven yetersiz (t=0.88 < 1.0) | LCB fark +1.03pp | Net ort fark +0.12 | t=0.88"
     },
     "promotion_count": 0,
@@ -539,7 +622,7 @@
       "promoted": false,
       "rollback": false,
       "note": "İstatistiksel güven yetersiz (t=0.88 < 1.0) | LCB fark +1.03pp | Net ort fark +0.12 | t=0.88",
-      "timestamp": "2026-09-30T05:50:37",
+      "timestamp": "2026-09-30T05:55:40",
       "train_mode": "Tam geçmiş"
     }
   },
@@ -573,7 +656,7 @@
       "days": 410
     },
     "model": null,
-    "updated": "2026-09-30T05:50:37"
+    "updated": "2026-09-30T05:55:40"
   },
   "retrain": {
     "pending": false,
@@ -609,7 +692,7 @@
       "EXIT_TP2_ATR": null
     }
   },
-  "status": "v3 sıfırlandı — yeni backtest bekleniyor",
+  "status": "🧠 META v2 | NORMAL | makro RISK_ON | guard NORMAL",
   "win_rate_optimizer": {
     "version": "2.0.0",
     "objective": "MAX_OOS_WIN_RATE_WITH_RISK_CONSTRAINTS",
@@ -617,7 +700,7 @@
     "return_col": "realized_5d",
     "outcome_col": null,
     "baseline_threshold": 75.0,
-    "last_run": "2026-09-30T09:53:30.590482Z",
+    "last_run": "2026-09-30T09:56:53.362648Z",
     "walk_forward_folds": [
       {
         "train_start": "2024-10-16",
@@ -752,5 +835,23 @@
     "n_cohorts": 41,
     "days": 410
   },
-  "live_metrics": {}
+  "live_metrics": {
+    "n": 0,
+    "wins": 0,
+    "win_rate": 0.0,
+    "wilson_lcb": 0.0,
+    "profit_factor": 0.0,
+    "avg_return": 0.0,
+    "median": 0.0,
+    "p10": 0.0,
+    "cohort_t": 0.0,
+    "n_cohorts": 0,
+    "days": 0
+  },
+  "health": {
+    "score": 100,
+    "status": "ok",
+    "ts": "2026-09-30T05:55:39",
+    "issues": []
+  }
 }

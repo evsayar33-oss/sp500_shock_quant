@@ -7,7 +7,7 @@
   "sec_ret5":2.8889315286,
   "sec_ret20":7.8406181324,
   "score":83.689516129,
-  "name":"Health Technology · LLY, JNJ, TMO",
+  "name":"Health Care · LLY, JNJ, TMO",
   "stealth":0.0,
   "side":"BİRİKİM"
  },
@@ -19,7 +19,7 @@
   "sec_ret5":0.8691374934,
   "sec_ret20":8.5243112146,
   "score":74.0625,
-  "name":"MU, NVDA, SNDK",
+  "name":"Information Technology · MU, NVDA, SNDK",
   "stealth":0.08,
   "side":"BİRİKİM"
  },
@@ -31,7 +31,7 @@
   "sec_ret5":0.6470289931,
   "sec_ret20":0.2174831572,
   "score":66.7036290323,
-  "name":"Health Technology · BSX, MDT, ISRG",
+  "name":"Health Care · BSX, MDT, ISRG",
   "stealth":0.15,
   "side":"GÖRECE GÜÇLÜ"
  },
@@ -55,7 +55,7 @@
   "sec_ret5":1.3167126501,
   "sec_ret20":-3.5935205749,
   "score":50.0302419355,
-  "name":"Transportation · UNP, FDX, CSX",
+  "name":"Industrials · UNP, FDX, CSX",
   "stealth":-0.31,
   "side":"GÖRECE GÜÇLÜ"
  },
@@ -67,7 +67,7 @@
   "sec_ret5":0.3879615274,
   "sec_ret20":-3.5725260127,
   "score":28.6088709677,
-  "name":"Electronic Technology · BA, GE, HWM",
+  "name":"Industrials · BA, GE, HWM",
   "stealth":-0.38,
   "side":"DAĞITIM"
  },
@@ -79,7 +79,7 @@
   "sec_ret5":-1.384265815,
   "sec_ret20":-4.7936284081,
   "score":28.2157258065,
-  "name":"Technology Services · CRM, NFLX, NOW",
+  "name":"CRM, NFLX, NOW",
   "stealth":0.15,
   "side":"DAĞITIM"
  },
@@ -91,7 +91,7 @@
   "sec_ret5":-3.1161386547,
   "sec_ret20":-7.3695291813,
   "score":14.3850806452,
-  "name":"Consumer Services · LVS, WYNN, FTV",
+  "name":"Consumer Discretionary · LVS, WYNN, FTV",
   "stealth":0.0,
   "side":"DAĞITIM"
  }
