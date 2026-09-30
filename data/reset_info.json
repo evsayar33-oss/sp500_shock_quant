@@ -1,16 +1,20 @@
 {
-  "ts": "2026-09-30T03:46:47",
+  "ts": "2026-09-30T05:50:37",
   "version": 3,
   "removed": [
     "backtest_ledger.csv (boş v3 defter yazıldı)",
     "sp500_signals_log.csv",
     "data/backtest_report.json",
-    "data/oos_trades.csv.gz"
+    "data/oos_trades.csv.gz",
+    "data/live_trades.csv",
+    "data/live_weekly.csv",
+    "data/live_summary.json",
+    "data/health.json"
   ],
   "exit_rule": {
     "EXIT_STOP_ATR": 3.0,
-    "EXIT_TP1_ATR": 1.5,
-    "EXIT_TP1_FRAC": 0.5,
-    "EXIT_TP2_ATR": 2.0
+    "EXIT_TP1_ATR": 1.0,
+    "EXIT_TP1_FRAC": 1.0,
+    "EXIT_TP2_ATR": null
   }
 }
