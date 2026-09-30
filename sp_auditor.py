@@ -107,7 +107,8 @@ def run_audit():
         # Meta-etiket kararı (OOS kanıt) + canlı profil ile nihai model
         # Meta, aktif skorlama üzerinde doğrulandı; bugün yeni profil terfi ettiyse bir sonraki denetimde
         # yeni aktif üzerinde yeniden doğrulanana kadar kapalı tutulur.
-        meta_on, meta_note = meta_decision(wf["active"], wf["meta"], wf["folds"])
+        meta_on, meta_note = meta_decision(wf["active"], wf["meta"], wf["folds"],
+                                           was_on=bool((state.get("meta_label") or {}).get("enabled")))
         if decision and meta_on:
             meta_on, meta_note = False, "Yeni model terfi etti; olasılık filtresi bir sonraki denetimde yeniden doğrulanacak"
         model = None

@@ -168,7 +168,9 @@ def main():
         refresh_constituents()  # ayda en az bir kez bileşen listesi yenilenir
     if not live.empty and "sector" in live.columns:
         members = load_members()
-        merge_universe([], sectors={t: s for t, s in zip(live["ticker"], live["sector"]) if t in members and s})
+        known = load_sectors()  # Wikipedia GICS adları korunur; TradingView yalnızca eksikleri doldurur
+        merge_universe([], sectors={t: s for t, s in zip(live["ticker"], live["sector"])
+                                    if t in members and s and not known.get(t)})
 
     panel = update_incremental()
     macro_raw = update_macro()

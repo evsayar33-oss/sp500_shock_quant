@@ -356,21 +356,32 @@ META_MIN_T = getattr(C, "META_MIN_T", 0.0)   # yön şartı (t>0); asıl kanıt 
 META_MIN_FOLD_SHARE = getattr(C, "META_MIN_FOLD_SHARE", 0.6)
 
 
-def meta_decision(base_m: dict, meta_m: dict, folds: list | None = None) -> tuple[bool, str]:
-    """Meta-etiket yalnızca OOS'ta win-rate LCB'yi yükseltir, net getiriyi ve PF'yi bozmaz ve bunu
-    dilimlerin çoğunda TUTARLI biçimde yaparsa açılır. (Günlük kohort t'si, filtre işlemleri az güne
-    yoğunlaştığı için bu karar için zayıf bir ölçüttür; dilim tutarlılığı daha anlamlıdır.)"""
+def meta_decision(base_m: dict, meta_m: dict, folds: list | None = None, was_on: bool = False) -> tuple[bool, str]:
+    """Kazanma olasılığı filtresinin açık/kapalı kararı — HİSTEREZİSLİ.
+
+    Açmak için (hepsi): dilimlerin >= %60'ında net üstünlük, toplam net kazanç >= +0.20 puan,
+      PF >= aktif PF, kazanma oranı >= +1 puan, yeterli işlem.
+    Açıkken kapatmak için (herhangi biri): dilimlerin < %50'sinde üstünlük, net kazanç < 0, PF < aktif PF,
+      kazanma oranı < −1 puan.
+    Neden: filtre aktif modelden ~5 kat az işlem yaptığı için güven aralığı doğal olarak geniştir; LCB
+    karşılaştırması küçük veri değişikliklerinde kararı gün içinde çevirebiliyordu (S&P, 30 Eyl: 11 dk arayla
+    açık→kapalı). Tutarlılık + ekonomik fark + histerezis kararlı ve savunulabilir bir kuraldır."""
     if meta_m["n"] < C.PROMOTION_MIN_OOS_TRADES:
         return False, f"meta OOS örneklem yetersiz (n={meta_m['n']})"
-    lcb = meta_m["wilson_lcb"] - base_m["wilson_lcb"]
+    wr = meta_m["win_rate"] - base_m["win_rate"]
     avg = meta_m["avg_return"] - base_m["avg_return"]
+    pf_ok = meta_m["profit_factor"] >= base_m["profit_factor"]
     fl = [f for f in (folds or []) if (f.get("meta") or {}).get("n", 0) >= 10 and (f.get("active") or {}).get("n", 0) >= 10]
     wins = sum(1 for f in fl if f["meta"]["avg_return"] > f["active"]["avg_return"])
     share = wins / len(fl) if fl else 0.0
-    ok = (lcb >= 0.5 and avg >= -0.05 and meta_m["profit_factor"] >= base_m["profit_factor"]
-          and meta_m["cohort_t"] >= META_MIN_T and share >= META_MIN_FOLD_SHARE)
-    return bool(ok), (f"meta LCB {lcb:+.2f}pp | net {avg:+.2f} | PF {meta_m['profit_factor']:.2f} vs {base_m['profit_factor']:.2f}"
-                      f" | dilim tutarlılığı {wins}/{len(fl)} | t={meta_m['cohort_t']:.2f}")
+    if was_on:
+        ok = share >= 0.5 and avg >= 0 and pf_ok and wr >= -1.0
+        mode = "korunuyor" if ok else "kapatıldı"
+    else:
+        ok = share >= META_MIN_FOLD_SHARE and avg >= 0.20 and pf_ok and wr >= 1.0 and meta_m["cohort_t"] >= META_MIN_T
+        mode = "açıldı" if ok else "kapalı"
+    return bool(ok), (f"filtre {mode} | kazanma {wr:+.1f}pp | net {avg:+.2f} | PF {meta_m['profit_factor']:.2f} vs "
+                      f"{base_m['profit_factor']:.2f} | dilim tutarlılığı {wins}/{len(fl)}")
 
 
 def promotion_decision(active_m: dict, cand_m: dict) -> tuple[bool, str]:
