@@ -1,11 +1,15 @@
-name: SP500 v2 NY Kapanis Taramasi + Ogrenme
+name: v3 Sifirlama ve Yeni Backtest (tek seferlik)
+
+# Eski backtest / defter / sinyal kayıtlarını siler, yeni çıkış kuralıyla sıfırdan backtest üretir.
+# Güvenlik: çalıştırırken "onay" kutusuna büyük harfle SIFIRLA yazılmalıdır.
 
 on:
-  schedule:
-    # Hafta ici UTC 22:30 = NY 18:30 (yaz) / 17:30 (kis). Teşhis: 21:30'da 503 hissenin 52'sinin ve SPY/HYG/LQD/RSP'nin
-    # son barı Yahoo'da henüz yoktu; bir saat sonra + eksik bar tekrar denemesi (main.retry_missing_last_bar).
-    - cron: '30 22 * * 1-5'
   workflow_dispatch:
+    inputs:
+      onay:
+        description: "Onay için SIFIRLA yazın"
+        required: true
+        default: "hayir"
 
 permissions:
   contents: write
@@ -15,9 +19,10 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  scan:
+  reset:
+    if: ${{ github.event.inputs.onay == 'SIFIRLA' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
 
@@ -31,18 +36,17 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Kapanis Taramasi (panel + skor + portfoy + defter)
+      - name: Sifirla
         env:
-          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-          CHAT_ID: ${{ secrets.CHAT_ID }}
           TZ: America/New_York
-        run: python main.py
+        run: python reset_v3.py
 
-      - name: Ogrenme Denetimi (walk-forward + terfi/rollback)
+      - name: Yeni backtest (tam yeniden egitim)
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
           TZ: America/New_York
+          FULL_RETRAIN: "1"
         run: python sp_auditor.py
 
       - name: Kaydet
@@ -51,7 +55,7 @@ jobs:
           git config --global user.email "bot@sp500.local"
           git add -A
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "🗽 SP500 v2 kapanis taramasi + ogrenme"
+          git commit -m "♻️ v3 sifirlama + yeni backtest"
           for i in 1 2 3; do
             git pull --rebase -X theirs && git push && exit 0
             sleep 5

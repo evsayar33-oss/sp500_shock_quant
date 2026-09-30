@@ -40,6 +40,7 @@ jobs:
 
       - name: Ogrenme Denetimi
         env:
+          FULL_RETRAIN: "1"
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
           TZ: America/New_York
