@@ -13,16 +13,16 @@
     "watch_streak": 0,
     "safe_streak": 0,
     "recovery_streak": 0,
-    "healthy_streak": 12,
+    "healthy_streak": 13,
     "last_transition": "2026-09-30T00:45:51.644331+00:00",
-    "last_evaluation": "2026-09-30T07:52:15.954825+00:00",
+    "last_evaluation": "2026-09-30T08:01:07.766165+00:00",
     "reason": "HEALTHY",
     "recent_regimes": [
       "STRESS",
       "STRESS",
       "STRESS",
       "STRESS",
-      "STRESS",
+      "NORMAL",
       "NORMAL",
       "NORMAL",
       "NORMAL",
@@ -168,12 +168,12 @@
       "profiles": {
         "CRASH": {
           "weights": {
-            "event": 0.1174,
-            "flow": 0.1818,
-            "activity": 0.1302,
-            "liquidity": 0.1368,
-            "resilience": 0.2591,
-            "sector": 0.1747
+            "event": 0.1179,
+            "flow": 0.1935,
+            "activity": 0.1427,
+            "liquidity": 0.1055,
+            "resilience": 0.2843,
+            "sector": 0.1562
           },
           "signs": {
             "event": 1,
@@ -185,72 +185,72 @@
           },
           "sign_stats": {
             "event": {
-              "ic": -0.0021,
-              "t": -0.21,
-              "days": 742
+              "ic": -0.0072,
+              "t": -0.5,
+              "days": 375
             },
             "flow": {
-              "ic": 0.0058,
-              "t": 0.51,
-              "days": 740
+              "ic": 0.0122,
+              "t": 0.74,
+              "days": 375
             },
             "activity": {
-              "ic": 0.0044,
-              "t": 0.53,
-              "days": 742
+              "ic": 0.0043,
+              "t": 0.38,
+              "days": 375
             },
             "liquidity": {
-              "ic": 0.0218,
-              "t": 1.91,
-              "days": 743
+              "ic": 0.0266,
+              "t": 1.6,
+              "days": 375
             },
             "resilience": {
-              "ic": 0.0173,
-              "t": 1.33,
-              "days": 743
+              "ic": 0.0229,
+              "t": 1.15,
+              "days": 375
             },
             "sector": {
-              "ic": 0.0098,
-              "t": 0.51,
-              "days": 537
+              "ic": 0.0217,
+              "t": 0.97,
+              "days": 375
             }
           },
-          "gate": "UP",
+          "gate": "ANY",
           "min_score": 82.0,
           "regime": "CRASH",
           "version": 2,
           "learned_edges": {
             "event": 0.005,
             "flow": 0.005,
-            "activity": 0.0074,
-            "liquidity": 0.0109,
+            "activity": 0.0154,
+            "liquidity": 0.0061,
             "resilience": 0.005,
-            "sector": 0.0112
+            "sector": 0.0095
           },
-          "regime_days": 121,
+          "regime_days": 55,
           "threshold_source": "REGIME",
           "train_metrics": {
-            "n": 379,
-            "wins": 209,
-            "win_rate": 55.15,
-            "wilson_lcb": 51.86,
-            "profit_factor": 1.06,
-            "avg_return": 0.097,
-            "median": 0.401,
-            "p10": -5.232,
-            "cohort_t": 0.27,
-            "n_cohorts": 18,
-            "days": 90
+            "n": 211,
+            "wins": 113,
+            "win_rate": 53.55,
+            "wilson_lcb": 49.14,
+            "profit_factor": 1.057,
+            "avg_return": 0.104,
+            "median": 0.292,
+            "p10": -5.931,
+            "cohort_t": 0.32,
+            "n_cohorts": 8,
+            "days": 44
           }
         },
         "STRESS": {
           "weights": {
-            "event": 0.116,
-            "flow": 0.2001,
-            "activity": 0.1215,
-            "liquidity": 0.169,
-            "resilience": 0.2342,
-            "sector": 0.1592
+            "event": 0.1253,
+            "flow": 0.2098,
+            "activity": 0.1253,
+            "liquidity": 0.1241,
+            "resilience": 0.2446,
+            "sector": 0.1708
           },
           "signs": {
             "event": 1,
@@ -262,59 +262,59 @@
           },
           "sign_stats": {
             "event": {
-              "ic": -0.0021,
-              "t": -0.21,
-              "days": 742
+              "ic": -0.0072,
+              "t": -0.5,
+              "days": 375
             },
             "flow": {
-              "ic": 0.0058,
-              "t": 0.51,
-              "days": 740
+              "ic": 0.0122,
+              "t": 0.74,
+              "days": 375
             },
             "activity": {
-              "ic": 0.0044,
-              "t": 0.53,
-              "days": 742
+              "ic": 0.0043,
+              "t": 0.38,
+              "days": 375
             },
             "liquidity": {
-              "ic": 0.0218,
-              "t": 1.91,
-              "days": 743
+              "ic": 0.0266,
+              "t": 1.6,
+              "days": 375
             },
             "resilience": {
-              "ic": 0.0173,
-              "t": 1.33,
-              "days": 743
+              "ic": 0.0229,
+              "t": 1.15,
+              "days": 375
             },
             "sector": {
-              "ic": 0.0098,
-              "t": 0.51,
-              "days": 537
+              "ic": 0.0217,
+              "t": 0.97,
+              "days": 375
             }
           },
-          "gate": "UP",
+          "gate": "ANY",
           "min_score": 77.0,
           "regime": "STRESS",
           "version": 2,
           "learned_edges": {
             "event": 0.005,
-            "flow": 0.017,
-            "activity": 0.0077,
-            "liquidity": 0.0406,
-            "resilience": 0.0175,
-            "sector": 0.0208
+            "flow": 0.0187,
+            "activity": 0.005,
+            "liquidity": 0.0214,
+            "resilience": 0.0169,
+            "sector": 0.0308
           },
-          "regime_days": 111,
+          "regime_days": 63,
           "threshold_source": "GLOBAL"
         },
         "ROTATION": {
           "weights": {
-            "event": 0.1313,
-            "flow": 0.2478,
-            "activity": 0.1459,
-            "liquidity": 0.124,
-            "resilience": 0.1824,
-            "sector": 0.1685
+            "event": 0.1336,
+            "flow": 0.2369,
+            "activity": 0.1487,
+            "liquidity": 0.126,
+            "resilience": 0.1864,
+            "sector": 0.1684
           },
           "signs": {
             "event": 1,
@@ -326,59 +326,59 @@
           },
           "sign_stats": {
             "event": {
-              "ic": -0.0021,
-              "t": -0.21,
-              "days": 742
+              "ic": -0.0072,
+              "t": -0.5,
+              "days": 375
             },
             "flow": {
-              "ic": 0.0058,
-              "t": 0.51,
-              "days": 740
+              "ic": 0.0122,
+              "t": 0.74,
+              "days": 375
             },
             "activity": {
-              "ic": 0.0044,
-              "t": 0.53,
-              "days": 742
+              "ic": 0.0043,
+              "t": 0.38,
+              "days": 375
             },
             "liquidity": {
-              "ic": 0.0218,
-              "t": 1.91,
-              "days": 743
+              "ic": 0.0266,
+              "t": 1.6,
+              "days": 375
             },
             "resilience": {
-              "ic": 0.0173,
-              "t": 1.33,
-              "days": 743
+              "ic": 0.0229,
+              "t": 1.15,
+              "days": 375
             },
             "sector": {
-              "ic": 0.0098,
-              "t": 0.51,
-              "days": 537
+              "ic": 0.0217,
+              "t": 0.97,
+              "days": 375
             }
           },
-          "gate": "UP",
+          "gate": "ANY",
           "min_score": 71.0,
           "regime": "ROTATION",
           "version": 2,
           "learned_edges": {
             "event": 0.005,
-            "flow": 0.0149,
+            "flow": 0.01,
             "activity": 0.005,
             "liquidity": 0.005,
             "resilience": 0.005,
-            "sector": 0.0136
+            "sector": 0.0137
           },
-          "regime_days": 71,
+          "regime_days": 56,
           "threshold_source": "GLOBAL"
         },
         "EXPANSION": {
           "weights": {
-            "event": 0.1473,
-            "flow": 0.1913,
-            "activity": 0.1765,
-            "liquidity": 0.231,
-            "resilience": 0.1344,
-            "sector": 0.1194
+            "event": 0.1429,
+            "flow": 0.2286,
+            "activity": 0.174,
+            "liquidity": 0.1717,
+            "resilience": 0.1428,
+            "sector": 0.1401
           },
           "signs": {
             "event": 1,
@@ -390,72 +390,72 @@
           },
           "sign_stats": {
             "event": {
-              "ic": -0.0021,
-              "t": -0.21,
-              "days": 742
+              "ic": -0.0072,
+              "t": -0.5,
+              "days": 375
             },
             "flow": {
-              "ic": 0.0058,
-              "t": 0.51,
-              "days": 740
+              "ic": 0.0122,
+              "t": 0.74,
+              "days": 375
             },
             "activity": {
-              "ic": 0.0044,
-              "t": 0.53,
-              "days": 742
+              "ic": 0.0043,
+              "t": 0.38,
+              "days": 375
             },
             "liquidity": {
-              "ic": 0.0218,
-              "t": 1.91,
-              "days": 743
+              "ic": 0.0266,
+              "t": 1.6,
+              "days": 375
             },
             "resilience": {
-              "ic": 0.0173,
-              "t": 1.33,
-              "days": 743
+              "ic": 0.0229,
+              "t": 1.15,
+              "days": 375
             },
             "sector": {
-              "ic": 0.0098,
-              "t": 0.51,
-              "days": 537
+              "ic": 0.0217,
+              "t": 0.97,
+              "days": 375
             }
           },
-          "gate": "UP",
-          "min_score": 70.0,
+          "gate": "ANY",
+          "min_score": 78.0,
           "regime": "EXPANSION",
           "version": 2,
           "learned_edges": {
-            "event": 0.0104,
-            "flow": 0.005,
-            "activity": 0.0108,
-            "liquidity": 0.0309,
-            "resilience": 0.0133,
-            "sector": 0.005
+            "event": 0.0139,
+            "flow": 0.008,
+            "activity": 0.01,
+            "liquidity": 0.0595,
+            "resilience": 0.0461,
+            "sector": 0.0136
           },
-          "regime_days": 183,
+          "regime_days": 83,
           "threshold_source": "REGIME",
           "train_metrics": {
-            "n": 1412,
-            "wins": 779,
-            "win_rate": 55.17,
-            "wilson_lcb": 53.47,
-            "profit_factor": 1.186,
-            "avg_return": 0.289,
-            "median": 0.625,
-            "p10": -5.263,
-            "cohort_t": 0.59,
-            "n_cohorts": 36,
-            "days": 180
+            "n": 363,
+            "wins": 205,
+            "win_rate": 56.47,
+            "wilson_lcb": 53.12,
+            "profit_factor": 1.46,
+            "avg_return": 0.76,
+            "median": 0.986,
+            "p10": -5.636,
+            "cohort_t": 1.23,
+            "n_cohorts": 15,
+            "days": 77
           }
         },
         "QUIET": {
           "weights": {
-            "event": 0.0855,
-            "flow": 0.1416,
-            "activity": 0.1295,
-            "liquidity": 0.2711,
-            "resilience": 0.2371,
-            "sector": 0.1352
+            "event": 0.0934,
+            "flow": 0.1697,
+            "activity": 0.1441,
+            "liquidity": 0.2264,
+            "resilience": 0.2124,
+            "sector": 0.1541
           },
           "signs": {
             "event": 1,
@@ -467,59 +467,59 @@
           },
           "sign_stats": {
             "event": {
-              "ic": -0.0021,
-              "t": -0.21,
-              "days": 742
+              "ic": -0.0072,
+              "t": -0.5,
+              "days": 375
             },
             "flow": {
-              "ic": 0.0058,
-              "t": 0.51,
-              "days": 740
+              "ic": 0.0122,
+              "t": 0.74,
+              "days": 375
             },
             "activity": {
-              "ic": 0.0044,
-              "t": 0.53,
-              "days": 742
+              "ic": 0.0043,
+              "t": 0.38,
+              "days": 375
             },
             "liquidity": {
-              "ic": 0.0218,
-              "t": 1.91,
-              "days": 743
+              "ic": 0.0266,
+              "t": 1.6,
+              "days": 375
             },
             "resilience": {
-              "ic": 0.0173,
-              "t": 1.33,
-              "days": 743
+              "ic": 0.0229,
+              "t": 1.15,
+              "days": 375
             },
             "sector": {
-              "ic": 0.0098,
-              "t": 0.51,
-              "days": 537
+              "ic": 0.0217,
+              "t": 0.97,
+              "days": 375
             }
           },
-          "gate": "UP",
-          "min_score": 70.0,
+          "gate": "ANY",
+          "min_score": 66.0,
           "regime": "QUIET",
           "version": 2,
           "learned_edges": {
             "event": 0.005,
-            "flow": 0.0079,
+            "flow": 0.0111,
             "activity": 0.0072,
-            "liquidity": 0.0268,
-            "resilience": 0.0223,
-            "sector": 0.0099
+            "liquidity": 0.0316,
+            "resilience": 0.0279,
+            "sector": 0.0159
           },
           "regime_days": 0,
           "threshold_source": "GLOBAL"
         },
         "NORMAL": {
           "weights": {
-            "event": 0.1104,
-            "flow": 0.1499,
-            "activity": 0.1166,
-            "liquidity": 0.2255,
-            "resilience": 0.2565,
-            "sector": 0.1411
+            "event": 0.1407,
+            "flow": 0.1878,
+            "activity": 0.1498,
+            "liquidity": 0.1708,
+            "resilience": 0.2099,
+            "sector": 0.1409
           },
           "signs": {
             "event": 1,
@@ -531,242 +531,110 @@
           },
           "sign_stats": {
             "event": {
-              "ic": -0.0021,
-              "t": -0.21,
-              "days": 742
+              "ic": -0.0072,
+              "t": -0.5,
+              "days": 375
             },
             "flow": {
-              "ic": 0.0058,
-              "t": 0.51,
-              "days": 740
+              "ic": 0.0122,
+              "t": 0.74,
+              "days": 375
             },
             "activity": {
-              "ic": 0.0044,
-              "t": 0.53,
-              "days": 742
+              "ic": 0.0043,
+              "t": 0.38,
+              "days": 375
             },
             "liquidity": {
-              "ic": 0.0218,
-              "t": 1.91,
-              "days": 743
+              "ic": 0.0266,
+              "t": 1.6,
+              "days": 375
             },
             "resilience": {
-              "ic": 0.0173,
-              "t": 1.33,
-              "days": 743
+              "ic": 0.0229,
+              "t": 1.15,
+              "days": 375
             },
             "sector": {
-              "ic": 0.0098,
-              "t": 0.51,
-              "days": 537
+              "ic": 0.0217,
+              "t": 0.97,
+              "days": 375
             }
           },
-          "gate": "UP",
-          "min_score": 74.0,
+          "gate": "ANY",
+          "min_score": 86.0,
           "regime": "NORMAL",
           "version": 2,
           "learned_edges": {
-            "event": 0.005,
-            "flow": 0.009,
-            "activity": 0.0064,
-            "liquidity": 0.0367,
-            "resilience": 0.0387,
-            "sector": 0.0145
+            "event": 0.0053,
+            "flow": 0.0139,
+            "activity": 0.0109,
+            "liquidity": 0.0445,
+            "resilience": 0.0482,
+            "sector": 0.0151
           },
-          "regime_days": 239,
+          "regime_days": 111,
           "threshold_source": "REGIME",
           "train_metrics": {
-            "n": 1575,
-            "wins": 913,
-            "win_rate": 57.97,
-            "wilson_lcb": 56.37,
-            "profit_factor": 1.346,
-            "avg_return": 0.494,
-            "median": 0.82,
-            "p10": -4.676,
-            "cohort_t": 1.31,
-            "n_cohorts": 46,
-            "days": 232
+            "n": 67,
+            "wins": 44,
+            "win_rate": 65.67,
+            "wilson_lcb": 57.94,
+            "profit_factor": 2.957,
+            "avg_return": 1.853,
+            "median": 1.472,
+            "p10": -3.709,
+            "cohort_t": 0.81,
+            "n_cohorts": 8,
+            "days": 40
           }
         }
       },
-      "created_at": "2026-09-30T03:51:00",
-      "decision": "Aday mutlak tabanı geçemedi (ort +0.02, PF 1.01)"
+      "created_at": "2026-09-30T03:59:08",
+      "decision": "Aday mutlak tabanı geçemedi (ort +0.04, PF 1.02)"
     },
     "promotion_count": 0,
     "rollback_count": 0,
-    "winrate_optimizer_status": "UNCHANGED | threshold=75.0 | OOS WR=54.75% | LCB=53.44% | N=2378",
+    "winrate_optimizer_status": "UNCHANGED | threshold=75.0 | OOS WR=55.48% | LCB=54.12% | N=2208",
     "last_decision": {
       "promoted": false,
       "rollback": false,
-      "note": "Aday mutlak tabanı geçemedi (ort +0.02, PF 1.01)",
-      "timestamp": "2026-09-30T03:51:00",
-      "train_mode": "Tam geçmiş"
+      "note": "Aday mutlak tabanı geçemedi (ort +0.04, PF 1.02)",
+      "timestamp": "2026-09-30T03:59:08",
+      "train_mode": "Yakın dönem (375 gün)"
     }
   },
   "meta_label": {
-    "enabled": true,
-    "note": "meta LCB +2.73pp | net +0.60 | PF 1.41 vs 1.07 | dilim tutarlılığı 6/7 | t=0.48",
+    "enabled": false,
+    "note": "meta LCB +0.34pp | net +0.44 | PF 1.31 vs 1.07 | dilim tutarlılığı 5/7 | t=0.15",
     "oos": {
-      "n": 440,
-      "wins": 256,
-      "win_rate": 58.18,
-      "wilson_lcb": 55.14,
-      "profit_factor": 1.41,
-      "avg_return": 0.737,
-      "median": 1.139,
-      "p10": -6.531,
-      "cohort_t": 0.48,
-      "n_cohorts": 19,
-      "days": 99
+      "n": 450,
+      "wins": 251,
+      "win_rate": 55.78,
+      "wilson_lcb": 52.76,
+      "profit_factor": 1.314,
+      "avg_return": 0.574,
+      "median": 0.924,
+      "p10": -6.352,
+      "cohort_t": 0.15,
+      "n_cohorts": 20,
+      "days": 102
     },
     "base_oos": {
-      "n": 2411,
-      "wins": 1295,
-      "win_rate": 53.71,
-      "wilson_lcb": 52.41,
-      "profit_factor": 1.073,
-      "avg_return": 0.139,
+      "n": 2403,
+      "wins": 1291,
+      "win_rate": 53.72,
+      "wilson_lcb": 52.42,
+      "profit_factor": 1.071,
+      "avg_return": 0.135,
       "median": 0.47,
-      "p10": -6.119,
-      "cohort_t": 0.73,
+      "p10": -6.13,
+      "cohort_t": 0.72,
       "n_cohorts": 84,
-      "days": 424
+      "days": 423
     },
-    "model": {
-      "w": [
-        -0.07188030619215176,
-        -0.006481105991130568,
-        -0.05294000740383758,
-        0.0010890162761476808,
-        0.12751414124494193,
-        0.027028257667035302,
-        0.06822235532298834,
-        -0.10008300647427607,
-        0.011087483605592452,
-        -0.047209080212933005,
-        -0.11514965397042021,
-        -0.14161955303081028,
-        0.03692193677258528,
-        0.03728138806914329,
-        -0.017518454498840118,
-        -0.047320506047754084,
-        0.021386417392567223,
-        -0.0047787870731516024,
-        -0.05463184417363518,
-        0.10657301103172734,
-        -0.0123850499892724,
-        -0.04167759130340113,
-        0.1290541514211563,
-        -0.05588360568781653,
-        -0.09096576100237645,
-        -0.08179274499574751,
-        -0.20502325095480703,
-        0.09499006656998965,
-        0.17285823124033123,
-        -0.05408661145494642,
-        0.13150386989313834,
-        0.05844956029800798
-      ],
-      "mu": {
-        "event_score": 51.07671198384539,
-        "flow_score": 67.8852779084637,
-        "activity_score": 48.96769454957025,
-        "liquidity_score": 51.261880348069184,
-        "resilience_score": 66.06405090166888,
-        "sector_score": 51.13095723773952,
-        "watch_score": 57.99241059570666,
-        "sec_cmf": 0.022691967923123165,
-        "sec_ret20": 0.6877023846855809,
-        "sec_acc": 0.14702842460796275,
-        "own_rel5": 1.3964166419828914,
-        "lead_gap": -1.2476783201616337,
-        "z_vol": -0.06284010094385235,
-        "z_range": -0.021260852996500067,
-        "cmf20": 0.09368418839245289,
-        "candle_pressure": 0.46594171240167986,
-        "close_location": 74.2095428826136,
-        "change_%": 1.4874282777171033,
-        "volatility": 1.883572241102436,
-        "gap_vol": 0.6965462733181522,
-        "rel_1m_pct": 60.35104832273183,
-        "rel_3m_pct": 55.738661572172866,
-        "macro_stress": 0.13355486602435626,
-        "regime_confidence": 0.7454084385740387,
-        "excess_return": 1.1795993788047676
-      },
-      "sd": {
-        "event_score": 20.02820718420458,
-        "flow_score": 13.749818443701903,
-        "activity_score": 27.07502888962313,
-        "liquidity_score": 28.561927567089562,
-        "resilience_score": 12.686293608576964,
-        "sector_score": 16.071807230833883,
-        "watch_score": 11.131225586227574,
-        "sec_cmf": 0.07724668897981998,
-        "sec_ret20": 3.7696588748951436,
-        "sec_acc": 0.13401302230078868,
-        "own_rel5": 4.218365762080844,
-        "lead_gap": 4.998557785935243,
-        "z_vol": 1.0395092139692501,
-        "z_range": 0.9635529507601861,
-        "cmf20": 0.12333470591080925,
-        "candle_pressure": 0.3433883484911439,
-        "close_location": 20.584702915304035,
-        "change_%": 1.5631601140510325,
-        "volatility": 1.0894193074263552,
-        "gap_vol": 0.46069020149532125,
-        "rel_1m_pct": 26.18388140102795,
-        "rel_3m_pct": 26.740779816307974,
-        "macro_stress": 0.1197562034647452,
-        "regime_confidence": 0.17783303229202657,
-        "excess_return": 1.5220995675489906
-      },
-      "band": 0.0,
-      "q": 0.62,
-      "train_metrics": {
-        "n": 224,
-        "wins": 157,
-        "win_rate": 70.09,
-        "wilson_lcb": 66.03,
-        "profit_factor": 2.179,
-        "avg_return": 1.848,
-        "median": 2.04,
-        "p10": -5.752,
-        "cohort_t": 0.61,
-        "n_cohorts": 16,
-        "days": 81
-      },
-      "feats": [
-        "event_score",
-        "flow_score",
-        "activity_score",
-        "liquidity_score",
-        "resilience_score",
-        "sector_score",
-        "watch_score",
-        "sec_cmf",
-        "sec_ret20",
-        "sec_acc",
-        "own_rel5",
-        "lead_gap",
-        "z_vol",
-        "z_range",
-        "cmf20",
-        "candle_pressure",
-        "close_location",
-        "change_%",
-        "volatility",
-        "gap_vol",
-        "rel_1m_pct",
-        "rel_3m_pct",
-        "macro_stress",
-        "regime_confidence",
-        "excess_return"
-      ],
-      "n_train": 124239
-    },
-    "updated": "2026-09-30T03:51:00"
+    "model": null,
+    "updated": "2026-09-30T03:59:08"
   },
   "retrain": {
     "pending": false,
@@ -777,6 +645,14 @@
         "done": "Yakın dönem (375 gün)",
         "reasons": [
           "SIFIRLAMA_V3"
+        ],
+        "promoted": false
+      },
+      {
+        "ts": "2026-09-30T03:59:08",
+        "done": "Yakın dönem (375 gün)",
+        "reasons": [
+          "HAFTALIK"
         ],
         "promoted": false
       }
@@ -806,140 +682,140 @@
     "return_col": "realized_5d",
     "outcome_col": null,
     "baseline_threshold": 75.0,
-    "last_run": "2026-09-30T07:52:15.877694Z",
+    "last_run": "2026-09-30T08:01:07.689226Z",
     "walk_forward_folds": [
       {
-        "train_start": "2024-10-08",
-        "train_end": "2025-03-27",
-        "test_start": "2025-04-07",
+        "train_start": "2024-10-09",
+        "train_end": "2025-03-28",
+        "test_start": "2025-04-08",
         "test_end": "2025-10-01",
         "selected_threshold": 75.0,
         "train": {
-          "n": 749,
-          "wins": 379,
-          "win_rate": 50.6,
-          "wilson_lcb": 48.26,
-          "pf": 0.7185,
-          "avg_return": -0.543
+          "n": 739,
+          "wins": 377,
+          "win_rate": 51.01,
+          "wilson_lcb": 48.66,
+          "pf": 0.7237,
+          "avg_return": -0.5324
         },
         "active_test": {
-          "n": 764,
-          "wins": 447,
-          "win_rate": 58.51,
-          "wilson_lcb": 56.21,
-          "pf": 1.5387,
-          "avg_return": 0.693
+          "n": 767,
+          "wins": 446,
+          "win_rate": 58.15,
+          "wilson_lcb": 55.85,
+          "pf": 1.4861,
+          "avg_return": 0.6369
         },
         "candidate_test": {
-          "n": 764,
-          "wins": 447,
-          "win_rate": 58.51,
-          "wilson_lcb": 56.21,
-          "pf": 1.5387,
-          "avg_return": 0.693
+          "n": 767,
+          "wins": 446,
+          "win_rate": 58.15,
+          "wilson_lcb": 55.85,
+          "pf": 1.4861,
+          "avg_return": 0.6369
         }
       },
       {
-        "train_start": "2024-10-08",
+        "train_start": "2024-10-09",
         "train_end": "2025-09-23",
         "test_start": "2025-10-02",
         "test_end": "2026-03-27",
-        "selected_threshold": 71.0,
+        "selected_threshold": 69.0,
         "train": {
-          "n": 1737,
-          "wins": 937,
-          "win_rate": 53.94,
-          "wilson_lcb": 52.41,
-          "pf": 1.0077,
-          "avg_return": 0.0126
+          "n": 1803,
+          "wins": 975,
+          "win_rate": 54.08,
+          "wilson_lcb": 52.57,
+          "pf": 1.0225,
+          "avg_return": 0.0365
         },
         "active_test": {
-          "n": 738,
-          "wins": 393,
-          "win_rate": 53.25,
-          "wilson_lcb": 50.89,
-          "pf": 0.9808,
-          "avg_return": -0.0339
+          "n": 683,
+          "wins": 367,
+          "win_rate": 53.73,
+          "wilson_lcb": 51.28,
+          "pf": 0.9902,
+          "avg_return": -0.017
         },
         "candidate_test": {
-          "n": 879,
-          "wins": 462,
-          "win_rate": 52.56,
-          "wilson_lcb": 50.4,
-          "pf": 0.9602,
-          "avg_return": -0.0694
+          "n": 906,
+          "wins": 482,
+          "win_rate": 53.2,
+          "wilson_lcb": 51.07,
+          "pf": 0.9756,
+          "avg_return": -0.0422
         }
       },
       {
-        "train_start": "2024-10-08",
+        "train_start": "2024-10-09",
         "train_end": "2026-03-19",
         "test_start": "2026-03-30",
         "test_end": "2026-09-22",
-        "selected_threshold": 83.0,
+        "selected_threshold": 71.0,
         "train": {
-          "n": 773,
-          "wins": 425,
-          "win_rate": 54.98,
-          "wilson_lcb": 52.68,
-          "pf": 1.1437,
-          "avg_return": 0.2389
+          "n": 2582,
+          "wins": 1401,
+          "win_rate": 54.26,
+          "wilson_lcb": 53.0,
+          "pf": 1.0358,
+          "avg_return": 0.0584
         },
         "active_test": {
-          "n": 876,
-          "wins": 462,
-          "win_rate": 52.74,
-          "wilson_lcb": 50.57,
-          "pf": 1.0276,
-          "avg_return": 0.0687
+          "n": 758,
+          "wins": 412,
+          "win_rate": 54.35,
+          "wilson_lcb": 52.03,
+          "pf": 1.0548,
+          "avg_return": 0.1367
         },
         "candidate_test": {
-          "n": 422,
-          "wins": 233,
-          "win_rate": 55.21,
-          "wilson_lcb": 52.1,
-          "pf": 1.0358,
-          "avg_return": 0.097
+          "n": 896,
+          "wins": 476,
+          "win_rate": 53.12,
+          "wilson_lcb": 50.98,
+          "pf": 1.046,
+          "avg_return": 0.1135
         }
       }
     ],
     "selected_thresholds": [
       75.0,
-      71.0,
-      83.0
+      69.0,
+      71.0
     ],
-    "candidate_threshold": 75.0,
+    "candidate_threshold": 71.0,
     "active_oos": {
-      "n": 2378,
-      "wins": 1302,
-      "win_rate": 54.75,
-      "wilson_lcb": 53.44,
-      "pf": 1.1263,
-      "avg_return": 0.2374
+      "n": 2208,
+      "wins": 1225,
+      "win_rate": 55.48,
+      "wilson_lcb": 54.12,
+      "pf": 1.1421,
+      "avg_return": 0.2629
     },
     "candidate_oos": {
-      "n": 2378,
-      "wins": 1302,
-      "win_rate": 54.75,
-      "wilson_lcb": 53.44,
-      "pf": 1.1263,
-      "avg_return": 0.2374
+      "n": 2620,
+      "wins": 1436,
+      "win_rate": 54.81,
+      "wilson_lcb": 53.56,
+      "pf": 1.1362,
+      "avg_return": 0.2499
     },
-    "decision_reason": "WIN_RATE_LIFT_TOO_SMALL (+0.00pp)",
+    "decision_reason": "WIN_RATE_LIFT_TOO_SMALL (-0.67pp)",
     "active_threshold": 75.0,
     "status": "UNCHANGED"
   },
   "backtest_summary": {
-    "n": 440,
-    "wins": 256,
-    "win_rate": 58.18,
-    "wilson_lcb": 55.14,
-    "profit_factor": 1.41,
-    "avg_return": 0.737,
-    "median": 1.139,
-    "p10": -6.531,
-    "cohort_t": 0.48,
-    "n_cohorts": 19,
-    "days": 99
+    "n": 2403,
+    "wins": 1291,
+    "win_rate": 53.72,
+    "wilson_lcb": 52.42,
+    "profit_factor": 1.071,
+    "avg_return": 0.135,
+    "median": 0.47,
+    "p10": -6.13,
+    "cohort_t": 0.72,
+    "n_cohorts": 84,
+    "days": 423
   },
   "live_metrics": {
     "n": 0,
@@ -955,8 +831,8 @@
     "days": 0
   },
   "heartbeat": {
-    "audit": "2026-09-30T03:52:15",
-    "weekly": "2026-09-30T03:48:57",
+    "audit": "2026-09-30T04:01:07",
+    "weekly": "2026-09-30T04:01:07",
     "scan": "2026-09-30T03:50:59"
   },
   "regime_hist": [
