@@ -1,0 +1,30 @@
+name: SP500 10 yillik veri disa aktar (tek seferlik)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: pip install -r requirements.txt
+      - name: Export
+        run: python long_export.py
+      - name: Push to long-data branch (main is not touched)
+        run: |
+          git config --local user.email "quantbot@users.noreply.github.com"
+          git config --local user.name "QuantBot AI"
+          git checkout --orphan long-data
+          git rm -r -q -f --cached .
+          git add -f long_out/
+          git commit -q -m "10 yillik arastirma verisi"
+          git push -f origin long-data
