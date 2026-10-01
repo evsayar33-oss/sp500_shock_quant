@@ -129,6 +129,9 @@ def status_of(row):
         q = num((ml.get("model") or {}).get("q"), 0.5)
         if num(pw) < q:
             reasons.append(f"Kazanma olasılığı filtreyi geçmedi (%{num(pw) * 100:.0f} < %{q * 100:.0f})")
+    lfr = row.get("lf_reason")
+    if isinstance(lfr, str) and lfr:
+        reasons.append(f"Volatilite filtresi eledi: {lfr}")
     if not reasons:
         reasons.append("Portföy limitleri (grup / korelasyon / brüt) nedeniyle seçilmedi")
     near = score >= thr - 5

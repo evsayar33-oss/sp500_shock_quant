@@ -162,3 +162,17 @@ EXIT_TP1_FRAC = 1.0                 # TP2 yapısı gerçek veride neti düşürd
 EXIT_TP2_ATR = None                 # TP2 yok (TP2'li varyant: BIST net +0.11, S&P −0.02 vs tam çıkış +0.13 / +0.20)
 ROLLING_TRAIN_DAYS = 375            # güçlü yeniden eğitimde denenecek yakın dönem penceresi (etiketli gün)
 HEALTH_CLOSE_HOUR = 17                # yerel saat (workflow TZ); bu saatten sonra bugünün barı beklenir
+
+# ------------------------------------------------------------------
+# v3.3 kayıp filtresi (loss_filter.py) — sistemin kendi gerçek OOS sinyallerinden öğrenildi
+#   Volatilite tabanı: TP1 = 1×ATR iken sakin hissede kazanç maliyeti zor karşılar. Sinyallerin en sakin
+#   %33'ü elendiğinde (ileriye dönük, gerçek veri) BIST net/işlem +0.78 -> +1.13, WR %68.6 -> %70.0, PF 1.30 -> 1.39;
+#   S&P +0.47 -> +0.57, PF 1.24 -> 1.27. Denetim her gün iç içe walk-forward ile yeniden sınar (histerezisli aç/kapa).
+#   Kayıp modeli (lojistik) araştırmada parlak göründü ama ayara aşırı duyarlıydı (aşırı uydurma) -> KAPALI.
+# ------------------------------------------------------------------
+LOSS_FILTER = True
+LOSS_VOL_Q = 0.33                   # sinyallerin en düşük volatiliteli bu oranı elenir (eşik her denetimde yeniden öğrenilir)
+LOSS_MODEL = False                  # kayıp olasılığı modeli: sağlamlık testini geçemedi
+LOSS_DROP_Q = 0.33
+LOSS_L2 = 50.0
+LOSS_MIN_LIFT = 0.10                # açmak için gereken net/işlem iyileşmesi (puan)

@@ -166,6 +166,10 @@ def scan_message(ctx: dict) -> str:
                     extra = f" · olasılık %{_f(w['p_win']) * 100:.0f} (gereken %{_f(w.get('q')) * 100:.0f})"
                 lines.append(f"• {_e(w['ticker'])}  skor {_f(w['score']):.1f}/{_f(w['thr']):.1f}{extra}")
 
+    lf_out = ctx.get("lf_out") or []
+    if lf_out:
+        names = ", ".join(_e(x["ticker"]) for x in lf_out[:5]) + (" …" if len(lf_out) > 5 else "")
+        lines.append(f"🧹 <i>Volatilite filtresi {len(lf_out)} sinyali eledi: {names}</i>")
     if positions:
         lines += ["", SEP, f"📂 <b>POZİSYONLAR ({len(positions)})</b>", "<pre>"]
         for p in positions:
@@ -212,7 +216,8 @@ def scan_message(ctx: dict) -> str:
 
     sc = ctx.get("scorecard") or {}
     if sc.get("n"):
-        meta = " · olasılık filtresi açık" if ctx.get("meta_on") else ""
+        meta = (" · olasılık filtresi açık" if ctx.get("meta_on") else "") + \
+               (" · volatilite filtresi açık" if ctx.get("lf_on") else "")
         lines += ["", f"<i>📊 Backtest karnesi: kazanma %{_f(sc.get('win_rate')):.0f} · "
                       f"işlem başı net %{_f(sc.get('avg_return')):+.2f} · PF {_f(sc.get('profit_factor')):.2f}{meta}</i>"]
     return "\n".join(l for l in lines if l is not None)
@@ -258,6 +263,17 @@ def audit_message(ctx: dict) -> str:
         state = "🟢 AÇIK" if ctx.get("meta_on") else "⚪ KAPALI"
         lines.append(f"🎚️ <b>Kazanma olasılığı filtresi:</b> {state}")
         lines.append(f"<i>Filtreli: kazanma %{m['win_rate']:.1f} · net %{m['avg_return']:+.2f} · PF {m['profit_factor']:.2f} (n={m['n']})</i>")
+
+    lf = ctx.get("lf") or {}
+    if lf.get("filt") and lf.get("base"):
+        b, f = lf["base"], lf["filt"]
+        state = "🟢 AÇIK" if lf.get("on") else "⚪ KAPALI"
+        lines.append(f"🧹 <b>Volatilite filtresi:</b> {state}")
+        lines.append(f"<i>Aynı dönemde filtresiz: kazanma %{b['win_rate']:.1f} · net %{b['avg_return']:+.2f} · PF {b['profit_factor']:.2f}</i>")
+        lines.append(f"<i>Filtreli: kazanma %{f['win_rate']:.1f} · net %{f['avg_return']:+.2f} · PF {f['profit_factor']:.2f} "
+                     f"· kalan sinyal %{100 * float(lf.get('kept') or 0):.0f}</i>")
+    elif lf.get("note"):
+        lines.append(f"🧹 <i>{_e(lf['note'])}</i>")
 
     ex = ctx.get("exits") or {}
     rates = ex.get("_rates") or {}

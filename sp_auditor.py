@@ -20,6 +20,7 @@ import pandas as pd
 
 import config as C
 import health
+import loss_filter as LF
 import report
 from autonomy_guard import evaluate_autonomy_guard
 from price_history import load_earnings, load_macro, load_panel
@@ -125,8 +126,27 @@ def run_audit():
         meta["winrate_optimizer_status"] = winrate_summary(state)
 
         live_trades = wf["meta_trades"] if meta_on else (wf["candidate_trades"] if decision else wf["active_trades"])
-        exits = exit_compare(live_trades)
         live_sc = wf["meta"] if meta_on else (wf["candidate"] if decision else wf["active"])
+
+        # v3.3 kayıp filtresi: canlı seçimin GERÇEK OOS işlemleri üzerinde iç içe walk-forward (her dilim yalnızca
+        # önceki dilimlerden öğrenir). Kanıt varsa açılır, kaybolursa kendiliğinden kapanır (histerezis).
+        lf_prev = state.get("loss_filter") or {}
+        if getattr(C, "LOSS_FILTER", False):
+            lfw = LF.walk_forward(live_trades, trade_metrics)
+        else:
+            lfw = {"ok": False, "reason": "config ile kapalı"}
+        if lfw.get("ok"):
+            lf_on, lf_note = LF.decision(lfw["base"], lfw["filt"], lfw["folds"], was_on=bool(lf_prev.get("enabled")))
+        else:
+            lf_on, lf_note = False, f"volatilite filtresi kapalı ({lfw.get('reason')})"
+        lf_model = LF.fit(live_trades) if lf_on else None
+        lf_on = bool(lf_on and lf_model)
+        state["loss_filter"] = {"enabled": lf_on, "note": lf_note, "model": lf_model, "base_oos": lfw.get("base"),
+                                "oos": lfw.get("filt"), "kept_share": lfw.get("kept_share"),
+                                "updated": t0.isoformat(timespec="seconds")}
+        if lf_on:
+            live_trades, live_sc = lfw["trades"], lfw["filt"]
+        exits = exit_compare(live_trades)
         state["backtest_summary"] = live_sc
         rep = {"generated": t0.isoformat(timespec="seconds"), "days": wf["days"], "horizon": C.HORIZON,
                "candidate_oos": wf["candidate"], "active_oos": wf["active"], "template_oos": wf["template"],
@@ -134,7 +154,10 @@ def run_audit():
                "exit_variants": {k: v for k, v in exits.items() if not k.startswith("_")}, "exit_rates": exits.get("_rates", {}),
                "exit_rule": {k: getattr(C, k, None) for k in ("EXIT_STOP_ATR", "EXIT_TP1_ATR", "EXIT_TP1_FRAC", "EXIT_TP2_ATR")},
                "train_mode": train_mode, "retrain_reasons": ctx["retrain"]["reasons"],
-               "ic_oos": wf["ic"], "folds": wf["folds"], "decision": note, "promoted": decision}
+               "ic_oos": wf["ic"], "folds": wf["folds"], "decision": note, "promoted": decision,
+               "loss_filter": {"enabled": lf_on, "note": lf_note, "base_oos": lfw.get("base"), "oos": lfw.get("filt"),
+                               "kept_share": lfw.get("kept_share"),
+                               "vol_floor": (lf_model or {}).get("vol_floor")}}
         os.makedirs(C.DATA_DIR, exist_ok=True)
         with open(C.BACKTEST_REPORT_FILE, "w", encoding="utf-8") as f:
             json.dump(rep, f, indent=2, ensure_ascii=False, default=str)
@@ -146,6 +169,8 @@ def run_audit():
                                                             compression={"method": "gzip", "mtime": 0})
         reg_now = state.get("last_scan", {}).get("regime", {}).get("label", "NORMAL")
         ctx.update({"active": wf["active"], "candidate": wf["candidate"], "meta": wf["meta"], "meta_on": meta_on,
+                    "lf": {"on": lf_on, "note": lf_note, "base": lfw.get("base"), "filt": lfw.get("filt"),
+                           "kept": lfw.get("kept_share")},
                     "exits": exits, "drivers": report.drivers_from_profile(live_profiles.get(reg_now, {})),
                     "gate": (live_profiles.get(reg_now) or {}).get("gate", "UP")})
 

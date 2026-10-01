@@ -30,6 +30,7 @@ from autonomy_guard import evaluate_autonomy_guard
 from price_history import (append_live_bar, load_earnings, load_members, load_sectors, merge_universe,
                            refresh_constituents, update_earnings, update_incremental, update_macro)
 from features import attach_regime, build_features, correlation_matrix
+import loss_filter as LF
 from meta_label import predict as meta_predict, select_with_meta
 from portfolio import build_portfolio
 from sector_flow import group_names, sector_board
@@ -256,6 +257,17 @@ def main():
             cands = cands.iloc[0:0]
     else:
         cands = scored[scored["shock_score"] >= scored["effective_min_score"]].head(C.TOP_K_PER_DAY).copy()
+    # v3.3 kayıp filtresi (volatilite tabanı): yalnızca denetim iç içe walk-forward kanıtıyla açtıysa uygulanır
+    lfs = state.get("loss_filter") or {}
+    lf_on = bool(lfs.get("enabled") and lfs.get("model"))
+    lf_out = []
+    scored["lf_reason"] = ""
+    if lf_on and not cands.empty:
+        lf_keep, lf_why = LF.apply(cands, lfs["model"])
+        rmap = dict(zip(cands.loc[~lf_keep, "ticker"], lf_why[~lf_keep]))
+        lf_out = [{"ticker": t, "why": w} for t, w in rmap.items()]
+        scored["lf_reason"] = scored["ticker"].map(rmap).fillna("")
+        cands = cands[lf_keep]
     for idx, r in cands.iterrows():
         has, when = check_earnings_risk(r["ticker"])
         if has:
@@ -317,7 +329,7 @@ def main():
     snap.to_csv(C.GECMIS_DOSYA, index=False)
 
     state["last_scan"] = {"day": str(pd.Timestamp(day).date()), "regime": {k: v for k, v in regime.items() if k != "day"},
-                          "data_quality": dq, "threshold_offset": offset, "n_candidates": int(len(cands)),
+                          "data_quality": dq, "threshold_offset": offset, "n_candidates": int(len(cands)), "n_loss_filtered": len(lf_out),
                           "n_positions": int((port["weight_pct"] > 0).sum()) if not port.empty else 0}
     state["status"] = f"🧠 META v2 | {regime['label']} | makro {regime['macro_label']} | guard {guard.get('mode')}"
     save_ai_state(state)
@@ -340,7 +352,7 @@ def main():
     report.send(report.scan_message({
         "day": day, "regime": regime, "guard": guard, "exposure": exposure, "picks": picks, "watch": watch,
         "positions": positions, "board": board, "scorecard": state.get("backtest_summary"),
-        "meta_on": bool(model), "dq": dq, "events": events, "live": live_summary, "health": hl,
+        "meta_on": bool(model), "lf_on": lf_on, "lf_out": lf_out, "dq": dq, "events": events, "live": live_summary, "health": hl,
         "week_end": pd.Timestamp(day).weekday() == 4}))
     print("Tarama tamamlandı.")
 
