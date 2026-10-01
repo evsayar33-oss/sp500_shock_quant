@@ -1,0 +1,27 @@
+{
+ "n_signals": 3,
+ "open": 0,
+ "pending": 3,
+ "all": {
+  "n": 0
+ },
+ "last20": {
+  "n": 0
+ },
+ "tp1_rate": null,
+ "stop_rate": null,
+ "since": "2026-10-01",
+ "backtest": {
+  "n": 1333,
+  "wins": 935,
+  "win_rate": 70.14,
+  "wilson_lcb": 68.51,
+  "profit_factor": 1.275,
+  "avg_return": 0.584,
+  "median": 2.728,
+  "p10": -8.57,
+  "cohort_t": 1.14,
+  "n_cohorts": 29,
+  "days": 299
+ }
+}

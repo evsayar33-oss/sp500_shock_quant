@@ -1,1 +1,4 @@
 date,ticker,label_version,signal_close,weight_pct,atr_pct,initial_score,effective_min_score,p_win,regime,macro_label,grp,grp_name,liq20,cost_rt,entry_date,entry_price,stop_price,tp1_price,tp2_price,status,exit_reason,exit_date,days,tp1_hit,tp1_date,tp2_hit,stop_hit,mtm_ret,net_ret,d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,is_completed
+2026-10-01,MRNA,3,192.89999389648438,4.8,0.06788009771320658,82.7,76.2,,NORMAL,NEUTRAL,5.0,"Health Care · MRNA, LLY, JNJ",2427029405.7510376,0.08435811782576341,,,,,,PENDING,,,,,,,,,,,,,,,,,,,,0
+2026-10-01,SNPS,3,478.5950012207031,6.3,0.03699819036031441,82.6,76.2,,NORMAL,NEUTRAL,12.0,"META, TSLA, MSFT",670468062.6358032,0.10634385945131881,,,,,,PENDING,,,,,,,,,,,,,,,,,,,,0
+2026-10-01,AMAT,3,527.6300048828125,6.8,0.03619824919773212,82.4,76.2,,NORMAL,NEUTRAL,4.0,"Information Technology · MU, NVDA, SNDK",2673822773.0,0.0832067827759127,,,,,,PENDING,,,,,,,,,,,,,,,,,,,,0

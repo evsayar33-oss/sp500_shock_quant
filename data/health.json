@@ -1,0 +1,92 @@
+{
+ "ts": "2026-10-01T09:46:58",
+ "score": 88,
+ "status": "warn",
+ "icon": "🟡",
+ "items": [
+  {
+   "group": "Veri",
+   "name": "Son bar",
+   "level": "ok",
+   "detail": "son gün 2026-10-01 (0 iş günü önce)"
+  },
+  {
+   "group": "Veri",
+   "name": "Son gün kapsamı",
+   "level": "ok",
+   "detail": "502 hisse (%100)"
+  },
+  {
+   "group": "Veri",
+   "name": "Son bar kaynağı",
+   "level": "ok",
+   "detail": "Yahoo 502 · TradingView yedeği 0"
+  },
+  {
+   "group": "Veri",
+   "name": "Geçersiz sıçrama (bugün)",
+   "level": "warn",
+   "detail": "1 hisse (düzeltilmemiş kurumsal işlem şüphesi, işlem dışı)"
+  },
+  {
+   "group": "Veri",
+   "name": "Makro seriler",
+   "level": "ok",
+   "detail": "hepsi güncel"
+  },
+  {
+   "group": "Kaynak",
+   "name": "Yahoo (artımlı)",
+   "level": "ok",
+   "detail": "Yahoo son gün 2026-10-01 · 502 hisse"
+  },
+  {
+   "group": "Kaynak",
+   "name": "TradingView",
+   "level": "ok",
+   "detail": "144 satır"
+  },
+  {
+   "group": "Model",
+   "name": "Son yeniden eğitim",
+   "level": "ok",
+   "detail": "0 saat önce"
+  },
+  {
+   "group": "Model",
+   "name": "Backtest örneklemi",
+   "level": "ok",
+   "detail": "1333 işlem · kazanma %70.14 · net %+0.584"
+  },
+  {
+   "group": "Model",
+   "name": "Otonomi modu",
+   "level": "ok",
+   "detail": "NORMAL"
+  },
+  {
+   "group": "Canlı",
+   "name": "Canlı sonuç",
+   "level": "ok",
+   "detail": "0 kapanmış işlem (anlamlı karşılaştırma için ≥20 gerekir)"
+  },
+  {
+   "group": "Çalışma",
+   "name": "Günlük tarama",
+   "level": "ok",
+   "detail": "0 saat önce"
+  },
+  {
+   "group": "Çalışma",
+   "name": "Öğrenme denetimi",
+   "level": "ok",
+   "detail": "0 saat önce"
+  },
+  {
+   "group": "Çalışma",
+   "name": "Haftalık yenileme",
+   "level": "ok",
+   "detail": "0 saat önce"
+  }
+ ]
+}

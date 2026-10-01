@@ -1,91 +1,91 @@
 {
-  "generated": "2026-10-01T09:37:11",
-  "days": 741,
+  "generated": "2026-10-01T09:46:59",
+  "days": 742,
   "horizon": 10,
   "candidate_oos": {
-    "n": 2258,
-    "wins": 1560,
-    "win_rate": 69.09,
-    "wilson_lcb": 67.83,
-    "profit_factor": 1.167,
-    "avg_return": 0.324,
-    "median": 2.102,
-    "p10": -7.185,
-    "cohort_t": 0.9,
+    "n": 2263,
+    "wins": 1565,
+    "win_rate": 69.16,
+    "wilson_lcb": 67.9,
+    "profit_factor": 1.173,
+    "avg_return": 0.334,
+    "median": 2.107,
+    "p10": -7.177,
+    "cohort_t": 0.92,
     "n_cohorts": 39,
-    "days": 395
+    "days": 396
   },
   "active_oos": {
-    "n": 2261,
-    "wins": 1539,
-    "win_rate": 68.07,
-    "wilson_lcb": 66.8,
-    "profit_factor": 1.101,
-    "avg_return": 0.206,
-    "median": 2.133,
-    "p10": -7.673,
-    "cohort_t": 0.87,
+    "n": 2269,
+    "wins": 1546,
+    "win_rate": 68.14,
+    "wilson_lcb": 66.87,
+    "profit_factor": 1.105,
+    "avg_return": 0.215,
+    "median": 2.137,
+    "p10": -7.674,
+    "cohort_t": 0.88,
     "n_cohorts": 41,
-    "days": 411
+    "days": 412
   },
   "template_oos": {
-    "n": 2261,
-    "wins": 1539,
-    "win_rate": 68.07,
-    "wilson_lcb": 66.8,
-    "profit_factor": 1.101,
-    "avg_return": 0.206,
-    "median": 2.133,
-    "p10": -7.673,
-    "cohort_t": 0.87,
+    "n": 2269,
+    "wins": 1546,
+    "win_rate": 68.14,
+    "wilson_lcb": 66.87,
+    "profit_factor": 1.105,
+    "avg_return": 0.215,
+    "median": 2.137,
+    "p10": -7.674,
+    "cohort_t": 0.88,
     "n_cohorts": 41,
-    "days": 411
+    "days": 412
   },
   "meta_oos": {
-    "n": 2166,
-    "wins": 1434,
-    "win_rate": 66.2,
-    "wilson_lcb": 64.89,
-    "profit_factor": 1.005,
-    "avg_return": 0.01,
+    "n": 2174,
+    "wins": 1438,
+    "win_rate": 66.15,
+    "wilson_lcb": 64.83,
+    "profit_factor": 1.002,
+    "avg_return": 0.005,
     "median": 2.02,
-    "p10": -7.586,
-    "cohort_t": 0.22,
+    "p10": -7.685,
+    "cohort_t": 0.21,
     "n_cohorts": 38,
-    "days": 386
+    "days": 387
   },
   "meta_enabled": false,
-  "meta_note": "filtre kapalı | kazanma -1.9pp | net -0.20 | PF 1.00 vs 1.10 | dilim tutarlılığı 4/8",
+  "meta_note": "filtre kapalı | kazanma -2.0pp | net -0.21 | PF 1.00 vs 1.10 | dilim tutarlılığı 4/8",
   "exit_variants": {
     "Aktif kural": {
-      "n": 1333,
-      "wins": 935,
-      "win_rate": 70.14,
-      "wilson_lcb": 68.51,
-      "profit_factor": 1.275,
-      "avg_return": 0.584,
-      "median": 2.728,
-      "p10": -8.57,
-      "cohort_t": 1.14,
-      "n_cohorts": 29,
-      "days": 299
+      "n": 1338,
+      "wins": 940,
+      "win_rate": 70.25,
+      "wilson_lcb": 68.63,
+      "profit_factor": 1.284,
+      "avg_return": 0.601,
+      "median": 2.74,
+      "p10": -8.566,
+      "cohort_t": 1.16,
+      "n_cohorts": 30,
+      "days": 300
     },
     "Yalnız T+10": {
-      "n": 1333,
-      "wins": 733,
-      "win_rate": 54.99,
-      "wilson_lcb": 53.24,
-      "profit_factor": 1.698,
-      "avg_return": 1.837,
-      "median": 0.837,
-      "p10": -8.61,
-      "cohort_t": 1.63,
-      "n_cohorts": 29,
-      "days": 299
+      "n": 1338,
+      "wins": 738,
+      "win_rate": 55.16,
+      "wilson_lcb": 53.41,
+      "profit_factor": 1.708,
+      "avg_return": 1.855,
+      "median": 0.893,
+      "p10": -8.581,
+      "cohort_t": 1.64,
+      "n_cohorts": 30,
+      "days": 300
     }
   },
   "exit_rates": {
-    "tp1": 66.2,
+    "tp1": 66.3,
     "tp2_given_tp1": 0.0,
     "stop": 9.5
   },
@@ -96,39 +96,37 @@
     "EXIT_TP2_ATR": null
   },
   "train_mode": "Tam geçmiş",
-  "retrain_reasons": [
-    "SIFIRLAMA_V3"
-  ],
+  "retrain_reasons": [],
   "ic_oos": {
     "event": {
-      "ic": -0.0028,
-      "t": -0.15,
-      "days": 395
+      "ic": -0.0026,
+      "t": -0.14,
+      "days": 396
     },
     "flow": {
-      "ic": 0.0036,
+      "ic": 0.0035,
       "t": 0.17,
-      "days": 395
+      "days": 396
     },
     "activity": {
-      "ic": 0.004,
+      "ic": 0.0039,
       "t": 0.24,
-      "days": 395
+      "days": 396
     },
     "liquidity": {
-      "ic": 0.0864,
-      "t": 4.62,
-      "days": 395
+      "ic": 0.0868,
+      "t": 4.64,
+      "days": 396
     },
     "resilience": {
-      "ic": 0.0718,
+      "ic": 0.0716,
       "t": 3.01,
-      "days": 395
+      "days": 396
     },
     "sector": {
-      "ic": 0.0526,
-      "t": 1.72,
-      "days": 395
+      "ic": 0.0531,
+      "t": 1.74,
+      "days": 396
     }
   },
   "folds": [
@@ -457,82 +455,82 @@
     {
       "train_end": "2026-07-07",
       "test_start": "2026-07-23",
-      "test_end": "2026-09-16",
+      "test_end": "2026-09-17",
       "candidate": {
-        "n": 191,
-        "wins": 141,
-        "win_rate": 73.82,
-        "wilson_lcb": 69.55,
-        "profit_factor": 2.19,
-        "avg_return": 1.399,
-        "median": 2.844,
-        "p10": -5.05,
-        "cohort_t": 1.11,
+        "n": 196,
+        "wins": 146,
+        "win_rate": 74.49,
+        "wilson_lcb": 70.31,
+        "profit_factor": 2.3,
+        "avg_return": 1.488,
+        "median": 2.852,
+        "p10": -5.002,
+        "cohort_t": 1.19,
         "n_cohorts": 3,
-        "days": 34
+        "days": 35
       },
       "active": {
-        "n": 209,
-        "wins": 140,
-        "win_rate": 66.99,
-        "wilson_lcb": 62.7,
-        "profit_factor": 1.351,
-        "avg_return": 0.603,
-        "median": 2.629,
-        "p10": -6.994,
-        "cohort_t": 0.4,
+        "n": 217,
+        "wins": 147,
+        "win_rate": 67.74,
+        "wilson_lcb": 63.55,
+        "profit_factor": 1.402,
+        "avg_return": 0.68,
+        "median": 2.635,
+        "p10": -7.01,
+        "cohort_t": 0.45,
         "n_cohorts": 3,
-        "days": 36
+        "days": 37
       },
       "meta": {
-        "n": 150,
-        "wins": 99,
-        "win_rate": 66.0,
-        "wilson_lcb": 60.89,
-        "profit_factor": 1.324,
-        "avg_return": 0.591,
+        "n": 158,
+        "wins": 103,
+        "win_rate": 65.19,
+        "wilson_lcb": 60.2,
+        "profit_factor": 1.251,
+        "avg_return": 0.489,
         "median": 2.692,
-        "p10": -7.022,
-        "cohort_t": 0.72,
+        "p10": -7.236,
+        "cohort_t": 0.68,
         "n_cohorts": 3,
-        "days": 30
+        "days": 31
       },
       "meta_on": true,
       "gate": "UP"
     }
   ],
-  "decision": "İstatistiksel güven yetersiz (t=0.90 < 1.0) | LCB fark +1.03pp | Net ort fark +0.12 | t=0.90",
+  "decision": "İstatistiksel güven yetersiz (t=0.92 < 1.0) | LCB fark +1.03pp | Net ort fark +0.12 | t=0.92",
   "promoted": false,
   "loss_filter": {
     "enabled": true,
-    "note": "volatilite filtresi açıldı | kazanma +0.4pp | net +0.11 | PF 1.27 vs 1.25 | dilim 5/6",
+    "note": "volatilite filtresi korunuyor | kazanma +0.4pp | net +0.11 | PF 1.28 vs 1.25 | dilim 5/6",
     "base_oos": {
-      "n": 1758,
-      "wins": 1226,
-      "win_rate": 69.74,
-      "wilson_lcb": 68.32,
-      "profit_factor": 1.249,
-      "avg_return": 0.476,
-      "median": 2.295,
-      "p10": -7.298,
-      "cohort_t": 1.1,
+      "n": 1766,
+      "wins": 1233,
+      "win_rate": 69.82,
+      "wilson_lcb": 68.4,
+      "profit_factor": 1.255,
+      "avg_return": 0.486,
+      "median": 2.304,
+      "p10": -7.299,
+      "cohort_t": 1.11,
       "n_cohorts": 31,
-      "days": 313
+      "days": 314
     },
     "oos": {
-      "n": 1333,
-      "wins": 935,
-      "win_rate": 70.14,
-      "wilson_lcb": 68.51,
-      "profit_factor": 1.275,
-      "avg_return": 0.584,
-      "median": 2.728,
-      "p10": -8.57,
-      "cohort_t": 1.14,
-      "n_cohorts": 29,
-      "days": 299
+      "n": 1338,
+      "wins": 940,
+      "win_rate": 70.25,
+      "wilson_lcb": 68.63,
+      "profit_factor": 1.284,
+      "avg_return": 0.601,
+      "median": 2.74,
+      "p10": -8.566,
+      "cohort_t": 1.16,
+      "n_cohorts": 30,
+      "days": 300
     },
-    "kept_share": 0.7582480091012515,
-    "vol_floor": 1.7805926272686503
+    "kept_share": 0.7576443941109853,
+    "vol_floor": 1.7805039059245324
   }
 }
