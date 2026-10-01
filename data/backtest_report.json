@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-30T21:23:02",
+  "generated": "2026-10-01T09:37:11",
   "days": 741,
   "horizon": 10,
   "candidate_oos": {
@@ -58,36 +58,36 @@
   "meta_note": "filtre kapalı | kazanma -1.9pp | net -0.20 | PF 1.00 vs 1.10 | dilim tutarlılığı 4/8",
   "exit_variants": {
     "Aktif kural": {
-      "n": 2261,
-      "wins": 1539,
-      "win_rate": 68.07,
-      "wilson_lcb": 66.8,
-      "profit_factor": 1.101,
-      "avg_return": 0.206,
-      "median": 2.133,
-      "p10": -7.673,
-      "cohort_t": 0.87,
-      "n_cohorts": 41,
-      "days": 411
+      "n": 1333,
+      "wins": 935,
+      "win_rate": 70.14,
+      "wilson_lcb": 68.51,
+      "profit_factor": 1.275,
+      "avg_return": 0.584,
+      "median": 2.728,
+      "p10": -8.57,
+      "cohort_t": 1.14,
+      "n_cohorts": 29,
+      "days": 299
     },
     "Yalnız T+10": {
-      "n": 2261,
-      "wins": 1169,
-      "win_rate": 51.7,
-      "wilson_lcb": 50.36,
-      "profit_factor": 1.298,
-      "avg_return": 0.784,
-      "median": 0.206,
-      "p10": -8.159,
-      "cohort_t": 1.07,
-      "n_cohorts": 41,
-      "days": 411
+      "n": 1333,
+      "wins": 733,
+      "win_rate": 54.99,
+      "wilson_lcb": 53.24,
+      "profit_factor": 1.698,
+      "avg_return": 1.837,
+      "median": 0.837,
+      "p10": -8.61,
+      "cohort_t": 1.63,
+      "n_cohorts": 29,
+      "days": 299
     }
   },
   "exit_rates": {
-    "tp1": 64.0,
+    "tp1": 66.2,
     "tp2_given_tp1": 0.0,
-    "stop": 11.8
+    "stop": 9.5
   },
   "exit_rule": {
     "EXIT_STOP_ATR": 3.0,
@@ -96,7 +96,9 @@
     "EXIT_TP2_ATR": null
   },
   "train_mode": "Tam geçmiş",
-  "retrain_reasons": [],
+  "retrain_reasons": [
+    "SIFIRLAMA_V3"
+  ],
   "ic_oos": {
     "event": {
       "ic": -0.0028,
@@ -500,5 +502,37 @@
     }
   ],
   "decision": "İstatistiksel güven yetersiz (t=0.90 < 1.0) | LCB fark +1.03pp | Net ort fark +0.12 | t=0.90",
-  "promoted": false
+  "promoted": false,
+  "loss_filter": {
+    "enabled": true,
+    "note": "volatilite filtresi açıldı | kazanma +0.4pp | net +0.11 | PF 1.27 vs 1.25 | dilim 5/6",
+    "base_oos": {
+      "n": 1758,
+      "wins": 1226,
+      "win_rate": 69.74,
+      "wilson_lcb": 68.32,
+      "profit_factor": 1.249,
+      "avg_return": 0.476,
+      "median": 2.295,
+      "p10": -7.298,
+      "cohort_t": 1.1,
+      "n_cohorts": 31,
+      "days": 313
+    },
+    "oos": {
+      "n": 1333,
+      "wins": 935,
+      "win_rate": 70.14,
+      "wilson_lcb": 68.51,
+      "profit_factor": 1.275,
+      "avg_return": 0.584,
+      "median": 2.728,
+      "p10": -8.57,
+      "cohort_t": 1.14,
+      "n_cohorts": 29,
+      "days": 299
+    },
+    "kept_share": 0.7582480091012515,
+    "vol_floor": 1.7805926272686503
+  }
 }

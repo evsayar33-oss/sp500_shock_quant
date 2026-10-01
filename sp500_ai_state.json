@@ -13,9 +13,9 @@
     "watch_streak": 0,
     "safe_streak": 0,
     "recovery_streak": 0,
-    "healthy_streak": 19,
+    "healthy_streak": 20,
     "last_transition": "2026-09-30T00:45:51.644331+00:00",
-    "last_evaluation": "2026-10-01T01:24:34.377790+00:00",
+    "last_evaluation": "2026-10-01T13:40:03.899673+00:00",
     "reason": "HEALTHY",
     "recent_regimes": [
       "NORMAL",
@@ -25,93 +25,11 @@
       "NORMAL",
       "NORMAL",
       "NORMAL",
-      "NORMAL",
+      "CRASH",
       "CRASH",
       "CRASH"
     ],
-    "feature_baseline": {
-      "shock_score": {
-        "n": 954,
-        "mean": 16.792029,
-        "std": 26.82337,
-        "median": 0.0,
-        "q25": 0.0,
-        "q75": 44.365,
-        "mad": 0.0
-      },
-      "z_vol": {
-        "n": 954,
-        "mean": -0.015391,
-        "std": 0.979363,
-        "median": -0.106326,
-        "q25": -0.663558,
-        "q75": 0.460176,
-        "mad": 0.564226
-      },
-      "z_flow": {
-        "n": 954,
-        "mean": 0.121522,
-        "std": 0.918963,
-        "median": 0.059757,
-        "q25": -0.638573,
-        "q75": 0.837399,
-        "mad": 0.734101
-      },
-      "z_range": {
-        "n": 954,
-        "mean": -0.187565,
-        "std": 0.934607,
-        "median": -0.239495,
-        "q25": -0.792456,
-        "q75": 0.396788,
-        "mad": 0.593302
-      },
-      "z_lambda": {
-        "n": 954,
-        "mean": -0.43652,
-        "std": 0.723612,
-        "median": -0.573189,
-        "q25": -0.995073,
-        "q75": -0.019559,
-        "mad": 0.453226
-      },
-      "change_%": {
-        "n": 954,
-        "mean": -0.160944,
-        "std": 1.929241,
-        "median": -0.274198,
-        "q25": -0.912032,
-        "q75": 0.384055,
-        "mad": 0.649014
-      },
-      "rvol": {
-        "n": 954,
-        "mean": 0.964371,
-        "std": 0.544494,
-        "median": 0.887018,
-        "q25": 0.740857,
-        "q75": 1.059349,
-        "mad": 0.154822
-      },
-      "perf_1m": {
-        "n": 954,
-        "mean": -4.679307,
-        "std": 9.617755,
-        "median": -5.718917,
-        "q25": -9.800721,
-        "q75": -0.657722,
-        "mad": 4.375058
-      },
-      "perf_3m": {
-        "n": 954,
-        "mean": -0.819742,
-        "std": 18.49462,
-        "median": -3.375669,
-        "q25": -11.565649,
-        "q75": 7.141427,
-        "mad": 9.253069
-      }
-    },
+    "feature_baseline": {},
     "stress_test": {
       "passed": true,
       "timestamp": "2026-10-01T01:23:01.194631+00:00",
@@ -130,8 +48,8 @@
     "last_reason": "HEALTHY"
   },
   "heartbeat": {
-    "audit": "2026-09-30T21:24:34",
-    "weekly": "2026-09-30T06:06:22",
+    "audit": "2026-10-01T09:40:03",
+    "weekly": "2026-10-01T09:40:03",
     "scan": "2026-09-30T21:23:01"
   },
   "last_scan": {
@@ -613,7 +531,7 @@
           }
         }
       },
-      "created_at": "2026-09-30T21:23:02",
+      "created_at": "2026-10-01T09:37:11",
       "decision": "İstatistiksel güven yetersiz (t=0.90 < 1.0) | LCB fark +1.03pp | Net ort fark +0.12 | t=0.90"
     },
     "promotion_count": 0,
@@ -623,7 +541,7 @@
       "promoted": false,
       "rollback": false,
       "note": "İstatistiksel güven yetersiz (t=0.90 < 1.0) | LCB fark +1.03pp | Net ort fark +0.12 | t=0.90",
-      "timestamp": "2026-09-30T21:23:02",
+      "timestamp": "2026-10-01T09:37:11",
       "train_mode": "Tam geçmiş"
     }
   },
@@ -657,32 +575,24 @@
       "days": 411
     },
     "model": null,
-    "updated": "2026-09-30T21:23:02"
+    "updated": "2026-10-01T09:37:11"
   },
   "retrain": {
     "pending": false,
     "reasons": [],
     "history": [
       {
-        "ts": "2026-09-30T05:50:37",
+        "ts": "2026-10-01T09:37:11",
         "done": "Tam geçmiş",
         "reasons": [
           "SIFIRLAMA_V3"
-        ],
-        "promoted": false
-      },
-      {
-        "ts": "2026-09-30T06:03:29",
-        "done": "Tam geçmiş",
-        "reasons": [
-          "HAFTALIK"
         ],
         "promoted": false
       }
     ]
   },
   "reset": {
-    "ts": "2026-09-30T05:50:37",
+    "ts": "2026-10-01T09:37:10",
     "version": 3,
     "removed": [
       "backtest_ledger.csv (boş v3 defter yazıldı)",
@@ -701,7 +611,7 @@
       "EXIT_TP2_ATR": null
     }
   },
-  "status": "🧠 META v2 | CRASH | makro RISK_ON | guard NORMAL",
+  "status": "v3 sıfırlandı — yeni backtest bekleniyor",
   "win_rate_optimizer": {
     "version": "2.0.0",
     "objective": "MAX_OOS_WIN_RATE_WITH_RISK_CONSTRAINTS",
@@ -709,7 +619,7 @@
     "return_col": "realized_5d",
     "outcome_col": null,
     "baseline_threshold": 75.0,
-    "last_run": "2026-10-01T01:24:34.262897Z",
+    "last_run": "2026-10-01T13:40:03.746065Z",
     "walk_forward_folds": [
       {
         "train_start": "2024-10-16",
@@ -831,39 +741,56 @@
     "active_threshold": 75.0,
     "status": "UNCHANGED"
   },
+  "loss_filter": {
+    "enabled": true,
+    "note": "volatilite filtresi açıldı | kazanma +0.4pp | net +0.11 | PF 1.27 vs 1.25 | dilim 5/6",
+    "model": {
+      "vol_floor": 1.7805926272686503,
+      "vol_q": 0.33,
+      "use_model": false,
+      "n_train": 2261
+    },
+    "base_oos": {
+      "n": 1758,
+      "wins": 1226,
+      "win_rate": 69.74,
+      "wilson_lcb": 68.32,
+      "profit_factor": 1.249,
+      "avg_return": 0.476,
+      "median": 2.295,
+      "p10": -7.298,
+      "cohort_t": 1.1,
+      "n_cohorts": 31,
+      "days": 313
+    },
+    "oos": {
+      "n": 1333,
+      "wins": 935,
+      "win_rate": 70.14,
+      "wilson_lcb": 68.51,
+      "profit_factor": 1.275,
+      "avg_return": 0.584,
+      "median": 2.728,
+      "p10": -8.57,
+      "cohort_t": 1.14,
+      "n_cohorts": 29,
+      "days": 299
+    },
+    "kept_share": 0.7582480091012515,
+    "updated": "2026-10-01T09:37:11"
+  },
   "backtest_summary": {
-    "n": 2261,
-    "wins": 1539,
-    "win_rate": 68.07,
-    "wilson_lcb": 66.8,
-    "profit_factor": 1.101,
-    "avg_return": 0.206,
-    "median": 2.133,
-    "p10": -7.673,
-    "cohort_t": 0.87,
-    "n_cohorts": 41,
-    "days": 411
+    "n": 1333,
+    "wins": 935,
+    "win_rate": 70.14,
+    "wilson_lcb": 68.51,
+    "profit_factor": 1.275,
+    "avg_return": 0.584,
+    "median": 2.728,
+    "p10": -8.57,
+    "cohort_t": 1.14,
+    "n_cohorts": 29,
+    "days": 299
   },
-  "live_metrics": {
-    "n": 0,
-    "wins": 0,
-    "win_rate": 0.0,
-    "wilson_lcb": 0.0,
-    "profit_factor": 0.0,
-    "avg_return": 0.0,
-    "median": 0.0,
-    "p10": 0.0,
-    "cohort_t": 0.0,
-    "n_cohorts": 0,
-    "days": 0
-  },
-  "health": {
-    "score": 76,
-    "status": "warn",
-    "ts": "2026-09-30T21:23:01",
-    "issues": [
-      "Son gün kapsamı: 451 hisse (%90)",
-      "Son bar kaynağı: Yahoo 0 · TradingView yedeği 451"
-    ]
-  }
+  "live_metrics": {}
 }
