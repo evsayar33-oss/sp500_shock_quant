@@ -1,6 +1,6 @@
 {
- "ts": "2026-10-01T09:46:58",
- "score": 88,
+ "ts": "2026-10-01T21:45:11",
+ "score": 64,
  "status": "warn",
  "icon": "🟡",
  "items": [
@@ -14,13 +14,13 @@
    "group": "Veri",
    "name": "Son gün kapsamı",
    "level": "ok",
-   "detail": "502 hisse (%100)"
+   "detail": "503 hisse (%100)"
   },
   {
    "group": "Veri",
    "name": "Son bar kaynağı",
    "level": "ok",
-   "detail": "Yahoo 502 · TradingView yedeği 0"
+   "detail": "Yahoo 503 · TradingView yedeği 0"
   },
   {
    "group": "Veri",
@@ -38,31 +38,37 @@
    "group": "Kaynak",
    "name": "Yahoo (artımlı)",
    "level": "ok",
-   "detail": "Yahoo son gün 2026-10-01 · 502 hisse"
+   "detail": "Yahoo son gün 2026-10-01 · 503 hisse"
   },
   {
    "group": "Kaynak",
    "name": "TradingView",
    "level": "ok",
-   "detail": "144 satır"
+   "detail": "700 satır"
   },
   {
    "group": "Model",
    "name": "Son yeniden eğitim",
    "level": "ok",
-   "detail": "0 saat önce"
+   "detail": "12 saat önce"
   },
   {
    "group": "Model",
    "name": "Backtest örneklemi",
    "level": "ok",
-   "detail": "1333 işlem · kazanma %70.14 · net %+0.584"
+   "detail": "1338 işlem · kazanma %70.25 · net %+0.601"
   },
   {
    "group": "Model",
    "name": "Otonomi modu",
-   "level": "ok",
-   "detail": "NORMAL"
+   "level": "warn",
+   "detail": "WATCH"
+  },
+  {
+   "group": "Model",
+   "name": "Yeniden eğitim tetikleyicisi",
+   "level": "warn",
+   "detail": "VERİ_KAYMASI (drift 0.78)"
   },
   {
    "group": "Canlı",
@@ -80,13 +86,13 @@
    "group": "Çalışma",
    "name": "Öğrenme denetimi",
    "level": "ok",
-   "detail": "0 saat önce"
+   "detail": "12 saat önce"
   },
   {
    "group": "Çalışma",
    "name": "Haftalık yenileme",
    "level": "ok",
-   "detail": "0 saat önce"
+   "detail": "12 saat önce"
   }
  ]
 }
