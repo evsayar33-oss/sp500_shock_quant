@@ -1,32 +1,32 @@
 {
- "ts": "2026-10-01T21:45:11",
- "score": 64,
- "status": "warn",
- "icon": "🟡",
+ "ts": "2026-10-02T21:16:15",
+ "score": 34,
+ "status": "bad",
+ "icon": "🔴",
  "items": [
   {
    "group": "Veri",
    "name": "Son bar",
    "level": "ok",
-   "detail": "son gün 2026-10-01 (0 iş günü önce)"
+   "detail": "son gün 2026-10-02 (0 iş günü önce)"
   },
   {
    "group": "Veri",
    "name": "Son gün kapsamı",
-   "level": "ok",
-   "detail": "503 hisse (%100)"
+   "level": "warn",
+   "detail": "440 hisse (%87)"
   },
   {
    "group": "Veri",
    "name": "Son bar kaynağı",
-   "level": "ok",
-   "detail": "Yahoo 503 · TradingView yedeği 0"
+   "level": "warn",
+   "detail": "Yahoo 0 · TradingView yedeği 440"
   },
   {
    "group": "Veri",
    "name": "Geçersiz sıçrama (bugün)",
-   "level": "warn",
-   "detail": "1 hisse (düzeltilmemiş kurumsal işlem şüphesi, işlem dışı)"
+   "level": "ok",
+   "detail": "0 hisse (düzeltilmemiş kurumsal işlem şüphesi, işlem dışı)"
   },
   {
    "group": "Veri",
@@ -38,7 +38,7 @@
    "group": "Kaynak",
    "name": "Yahoo (artımlı)",
    "level": "ok",
-   "detail": "Yahoo son gün 2026-10-01 · 503 hisse"
+   "detail": "Yahoo son gün 2026-10-01 · 0 hisse (bugünkü bar TradingView'den)"
   },
   {
    "group": "Kaynak",
@@ -50,7 +50,7 @@
    "group": "Model",
    "name": "Son yeniden eğitim",
    "level": "ok",
-   "detail": "12 saat önce"
+   "detail": "24 saat önce"
   },
   {
    "group": "Model",
@@ -61,8 +61,8 @@
   {
    "group": "Model",
    "name": "Otonomi modu",
-   "level": "warn",
-   "detail": "WATCH"
+   "level": "bad",
+   "detail": "SAFE"
   },
   {
    "group": "Model",
@@ -74,7 +74,7 @@
    "group": "Canlı",
    "name": "Canlı sonuç",
    "level": "ok",
-   "detail": "0 kapanmış işlem (anlamlı karşılaştırma için ≥20 gerekir)"
+   "detail": "1 kapanmış işlem (anlamlı karşılaştırma için ≥20 gerekir)"
   },
   {
    "group": "Çalışma",
@@ -86,13 +86,13 @@
    "group": "Çalışma",
    "name": "Öğrenme denetimi",
    "level": "ok",
-   "detail": "12 saat önce"
+   "detail": "23 saat önce"
   },
   {
    "group": "Çalışma",
    "name": "Haftalık yenileme",
    "level": "ok",
-   "detail": "12 saat önce"
+   "detail": "35 saat önce"
   }
  ]
 }

@@ -1,15 +1,23 @@
 {
  "n_signals": 1,
  "open": 0,
- "pending": 1,
+ "pending": 0,
  "all": {
-  "n": 0
+  "n": 1,
+  "win_rate": 100.0,
+  "avg_return": 6.396,
+  "profit_factor": null,
+  "sum": 6.4
  },
  "last20": {
-  "n": 0
+  "n": 1,
+  "win_rate": 100.0,
+  "avg_return": 6.396,
+  "profit_factor": null,
+  "sum": 6.4
  },
- "tp1_rate": null,
- "stop_rate": null,
+ "tp1_rate": 100.0,
+ "stop_rate": 0.0,
  "since": "2026-10-01",
  "backtest": {
   "n": 1338,
@@ -23,5 +31,16 @@
   "cohort_t": 1.16,
   "n_cohorts": 30,
   "days": 300
+ },
+ "this_week": {
+  "Hafta": "2026-H40",
+  "İşlem": 1,
+  "Kazanan": 1,
+  "Kazanma %": 100.0,
+  "Ort. net %": 6.4,
+  "Portföy katkısı %": 0.13,
+  "Kümülatif katkı %": 0.13,
+  "TP1 %": 100.0,
+  "Stop %": 0.0
  }
 }

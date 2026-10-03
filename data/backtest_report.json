@@ -1,87 +1,87 @@
 {
-  "generated": "2026-10-01T21:45:12",
-  "days": 742,
+  "generated": "2026-10-02T21:16:17",
+  "days": 743,
   "horizon": 10,
   "candidate_oos": {
-    "n": 2263,
-    "wins": 1565,
-    "win_rate": 69.16,
-    "wilson_lcb": 67.9,
-    "profit_factor": 1.173,
-    "avg_return": 0.334,
-    "median": 2.107,
-    "p10": -7.177,
-    "cohort_t": 0.92,
+    "n": 2265,
+    "wins": 1567,
+    "win_rate": 69.18,
+    "wilson_lcb": 67.93,
+    "profit_factor": 1.175,
+    "avg_return": 0.338,
+    "median": 2.108,
+    "p10": -7.176,
+    "cohort_t": 0.93,
     "n_cohorts": 39,
-    "days": 396
+    "days": 397
   },
   "active_oos": {
-    "n": 2269,
-    "wins": 1546,
-    "win_rate": 68.14,
-    "wilson_lcb": 66.87,
-    "profit_factor": 1.105,
-    "avg_return": 0.215,
-    "median": 2.137,
-    "p10": -7.674,
-    "cohort_t": 0.88,
+    "n": 2271,
+    "wins": 1548,
+    "win_rate": 68.16,
+    "wilson_lcb": 66.9,
+    "profit_factor": 1.107,
+    "avg_return": 0.218,
+    "median": 2.14,
+    "p10": -7.673,
+    "cohort_t": 0.9,
     "n_cohorts": 41,
-    "days": 412
+    "days": 413
   },
   "template_oos": {
-    "n": 2269,
-    "wins": 1546,
-    "win_rate": 68.14,
-    "wilson_lcb": 66.87,
-    "profit_factor": 1.105,
-    "avg_return": 0.215,
-    "median": 2.137,
-    "p10": -7.674,
-    "cohort_t": 0.88,
+    "n": 2271,
+    "wins": 1548,
+    "win_rate": 68.16,
+    "wilson_lcb": 66.9,
+    "profit_factor": 1.107,
+    "avg_return": 0.218,
+    "median": 2.14,
+    "p10": -7.673,
+    "cohort_t": 0.9,
     "n_cohorts": 41,
-    "days": 412
+    "days": 413
   },
   "meta_oos": {
-    "n": 2174,
-    "wins": 1438,
-    "win_rate": 66.15,
-    "wilson_lcb": 64.83,
-    "profit_factor": 1.003,
-    "avg_return": 0.005,
+    "n": 2176,
+    "wins": 1440,
+    "win_rate": 66.18,
+    "wilson_lcb": 64.86,
+    "profit_factor": 1.004,
+    "avg_return": 0.009,
     "median": 2.02,
-    "p10": -7.685,
-    "cohort_t": 0.21,
+    "p10": -7.681,
+    "cohort_t": 0.23,
     "n_cohorts": 38,
-    "days": 387
+    "days": 388
   },
   "meta_enabled": false,
-  "meta_note": "filtre kapalı | kazanma -2.0pp | net -0.21 | PF 1.00 vs 1.10 | dilim tutarlılığı 4/8",
+  "meta_note": "filtre kapalı | kazanma -2.0pp | net -0.21 | PF 1.00 vs 1.11 | dilim tutarlılığı 4/8",
   "exit_variants": {
     "Aktif kural": {
-      "n": 1338,
-      "wins": 940,
-      "win_rate": 70.25,
-      "wilson_lcb": 68.63,
-      "profit_factor": 1.284,
-      "avg_return": 0.601,
-      "median": 2.74,
-      "p10": -8.566,
-      "cohort_t": 1.16,
+      "n": 1340,
+      "wins": 942,
+      "win_rate": 70.3,
+      "wilson_lcb": 68.67,
+      "profit_factor": 1.287,
+      "avg_return": 0.606,
+      "median": 2.743,
+      "p10": -8.564,
+      "cohort_t": 1.18,
       "n_cohorts": 30,
-      "days": 300
+      "days": 301
     },
     "Yalnız T+10": {
-      "n": 1338,
-      "wins": 738,
-      "win_rate": 55.16,
-      "wilson_lcb": 53.41,
-      "profit_factor": 1.708,
-      "avg_return": 1.856,
-      "median": 0.893,
-      "p10": -8.581,
-      "cohort_t": 1.65,
+      "n": 1340,
+      "wins": 740,
+      "win_rate": 55.22,
+      "wilson_lcb": 53.48,
+      "profit_factor": 1.712,
+      "avg_return": 1.864,
+      "median": 0.895,
+      "p10": -8.569,
+      "cohort_t": 1.66,
       "n_cohorts": 30,
-      "days": 300
+      "days": 301
     }
   },
   "exit_rates": {
@@ -101,34 +101,34 @@
   ],
   "ic_oos": {
     "event": {
-      "ic": -0.0026,
-      "t": -0.14,
-      "days": 396
+      "ic": -0.0024,
+      "t": -0.13,
+      "days": 397
     },
     "flow": {
-      "ic": 0.0034,
-      "t": 0.17,
-      "days": 396
+      "ic": 0.0037,
+      "t": 0.18,
+      "days": 397
     },
     "activity": {
-      "ic": 0.0039,
-      "t": 0.24,
-      "days": 396
+      "ic": 0.0035,
+      "t": 0.22,
+      "days": 397
     },
     "liquidity": {
-      "ic": 0.0868,
-      "t": 4.64,
-      "days": 396
+      "ic": 0.0871,
+      "t": 4.66,
+      "days": 397
     },
     "resilience": {
-      "ic": 0.0716,
-      "t": 3.01,
-      "days": 396
+      "ic": 0.0711,
+      "t": 2.98,
+      "days": 397
     },
     "sector": {
-      "ic": 0.0532,
-      "t": 1.74,
-      "days": 396
+      "ic": 0.054,
+      "t": 1.77,
+      "days": 397
     }
   },
   "folds": [
@@ -457,82 +457,82 @@
     {
       "train_end": "2026-07-07",
       "test_start": "2026-07-23",
-      "test_end": "2026-09-17",
+      "test_end": "2026-09-18",
       "candidate": {
-        "n": 196,
-        "wins": 146,
-        "win_rate": 74.49,
-        "wilson_lcb": 70.31,
-        "profit_factor": 2.3,
-        "avg_return": 1.488,
-        "median": 2.852,
-        "p10": -5.002,
-        "cohort_t": 1.19,
+        "n": 198,
+        "wins": 148,
+        "win_rate": 74.75,
+        "wilson_lcb": 70.6,
+        "profit_factor": 2.335,
+        "avg_return": 1.513,
+        "median": 2.854,
+        "p10": -4.983,
+        "cohort_t": 1.26,
         "n_cohorts": 3,
-        "days": 35
+        "days": 36
       },
       "active": {
-        "n": 217,
-        "wins": 147,
-        "win_rate": 67.74,
-        "wilson_lcb": 63.55,
-        "profit_factor": 1.402,
-        "avg_return": 0.68,
-        "median": 2.635,
-        "p10": -7.01,
-        "cohort_t": 0.45,
+        "n": 219,
+        "wins": 149,
+        "win_rate": 68.04,
+        "wilson_lcb": 63.88,
+        "profit_factor": 1.423,
+        "avg_return": 0.71,
+        "median": 2.677,
+        "p10": -6.994,
+        "cohort_t": 0.51,
         "n_cohorts": 3,
-        "days": 37
+        "days": 38
       },
       "meta": {
-        "n": 158,
-        "wins": 103,
-        "win_rate": 65.19,
-        "wilson_lcb": 60.2,
-        "profit_factor": 1.253,
-        "avg_return": 0.492,
-        "median": 2.692,
-        "p10": -7.236,
-        "cohort_t": 0.68,
+        "n": 160,
+        "wins": 105,
+        "win_rate": 65.62,
+        "wilson_lcb": 60.68,
+        "profit_factor": 1.278,
+        "avg_return": 0.535,
+        "median": 2.727,
+        "p10": -7.234,
+        "cohort_t": 0.75,
         "n_cohorts": 3,
-        "days": 31
+        "days": 32
       },
       "meta_on": true,
       "gate": "UP"
     }
   ],
-  "decision": "İstatistiksel güven yetersiz (t=0.92 < 1.0) | LCB fark +1.03pp | Net ort fark +0.12 | t=0.92",
+  "decision": "İstatistiksel güven yetersiz (t=0.93 < 1.0) | LCB fark +1.03pp | Net ort fark +0.12 | t=0.93",
   "promoted": false,
   "loss_filter": {
     "enabled": true,
-    "note": "volatilite filtresi korunuyor | kazanma +0.4pp | net +0.11 | PF 1.28 vs 1.25 | dilim 5/6",
+    "note": "volatilite filtresi korunuyor | kazanma +0.5pp | net +0.12 | PF 1.29 vs 1.26 | dilim 5/6",
     "base_oos": {
-      "n": 1766,
-      "wins": 1233,
-      "win_rate": 69.82,
-      "wilson_lcb": 68.4,
-      "profit_factor": 1.255,
-      "avg_return": 0.486,
-      "median": 2.304,
-      "p10": -7.299,
-      "cohort_t": 1.11,
+      "n": 1768,
+      "wins": 1235,
+      "win_rate": 69.85,
+      "wilson_lcb": 68.44,
+      "profit_factor": 1.258,
+      "avg_return": 0.49,
+      "median": 2.307,
+      "p10": -7.298,
+      "cohort_t": 1.13,
       "n_cohorts": 31,
-      "days": 314
+      "days": 315
     },
     "oos": {
-      "n": 1338,
-      "wins": 940,
-      "win_rate": 70.25,
-      "wilson_lcb": 68.63,
-      "profit_factor": 1.284,
-      "avg_return": 0.601,
-      "median": 2.74,
-      "p10": -8.566,
-      "cohort_t": 1.16,
+      "n": 1340,
+      "wins": 942,
+      "win_rate": 70.3,
+      "wilson_lcb": 68.67,
+      "profit_factor": 1.287,
+      "avg_return": 0.606,
+      "median": 2.743,
+      "p10": -8.564,
+      "cohort_t": 1.18,
       "n_cohorts": 30,
-      "days": 300
+      "days": 301
     },
-    "kept_share": 0.7576443941109853,
-    "vol_floor": 1.7805039059245324
+    "kept_share": 0.7579185520361991,
+    "vol_floor": 1.7806665617220818
   }
 }
